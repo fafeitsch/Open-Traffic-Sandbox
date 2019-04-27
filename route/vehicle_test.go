@@ -2,10 +2,56 @@ package route
 
 import (
 	"fmt"
+	"sync"
 	"testing"
+	"time"
 )
 
-func TestRoutedVehicle_drive(t *testing.T) {
+type FixedIntervalClock struct {
+	time int64
+}
+
+func (f *FixedIntervalClock) Now() time.Time {
+	f.time = f.time + 52
+	return time.Unix(0, f.time*1000*1000)
+}
+
+func (f *FixedIntervalClock) Sleep(d time.Duration) {
+
+}
+
+func TestRoutedVehicle_StartJourney(t *testing.T) {
+	clock := FixedIntervalClock{}
+	receiver := make(chan VehicleLocation, 1)
+	quit := make(chan int, 1)
+	_, _, _, _, vehicle := createSampleVehicle()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		vehicle.startJourneyWithClock(&clock, receiver, quit)
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		_, open := <-receiver
+		events := 1
+		for open {
+			_, open = <-receiver
+			if open {
+				events = events + 1
+			}
+		}
+		if events != 2216 {
+			t.Errorf("2216 events should be generated but there were %d events.", events)
+		}
+	}()
+	time.Sleep(1000 * time.Millisecond)
+	quit <- 1
+	wg.Wait()
+}
+
+func createSampleVehicle() (ChainedCoordinate, ChainedCoordinate, ChainedCoordinate, ChainedCoordinate, RoutedVehicle) {
 	c1_1 := Coordinate{Lat: 1, Lon: 1}
 	c35_35 := Coordinate{Lat: 3.5, Lon: 3.5}
 	c8_2 := Coordinate{Lat: 8, Lon: 2}
@@ -16,8 +62,12 @@ func TestRoutedVehicle_drive(t *testing.T) {
 	cc3 := ChainedCoordinate{Coordinate: c8_2, Next: &cc4, DistanceToNext: 700}
 	cc2 := ChainedCoordinate{Coordinate: c35_35, Next: &cc3, DistanceToNext: 300}
 	cc1 := ChainedCoordinate{Coordinate: c1_1, Next: &cc2, DistanceToNext: 500}
-
 	vehicle := RoutedVehicle{Waypoints: &cc1, SpeedKmh: 50, Id: 4242}
+	return cc5, cc4, cc2, cc1, vehicle
+}
+
+func TestRoutedVehicle_drive(t *testing.T) {
+	cc5, cc4, cc2, cc1, vehicle := createSampleVehicle()
 
 	actual := vehicle.drive(&cc1, 175, 550)
 	expected := driveResult{location: &Coordinate{Lat: 6.875, Lon: 2.375}, lastWp: &cc2, distanceBetween: 225}
@@ -28,11 +78,11 @@ func TestRoutedVehicle_drive(t *testing.T) {
 	compareDriveResult(expected, actual, t)
 
 	actual = vehicle.drive(&cc2, 225, 875)
-	expected = driveResult{location: &Coordinate{Lat: 13.5, Lon: 3.5}, lastWp: &cc5, distanceBetween: 0}
+	expected = driveResult{location: &Coordinate{Lat: 13.5, Lon: 3.5}, lastWp: &cc5, distanceBetween: 0, destinationReached: true}
 	compareDriveResult(expected, actual, t)
 
 	actual = vehicle.drive(&cc2, 225, 1000)
-	expected = driveResult{location: &Coordinate{Lat: 13.5, Lon: 3.5}, lastWp: &cc5, distanceBetween: 0}
+	expected = driveResult{location: &Coordinate{Lat: 13.5, Lon: 3.5}, lastWp: &cc5, distanceBetween: 0, destinationReached: true}
 	compareDriveResult(expected, actual, t)
 }
 
@@ -45,6 +95,9 @@ func compareDriveResult(expected driveResult, actual driveResult, t *testing.T) 
 	}
 	if expected.distanceBetween != actual.distanceBetween {
 		t.Errorf("Expected distanceBetween %f; Actual distanceBetween %f", expected.distanceBetween, actual.distanceBetween)
+	}
+	if expected.destinationReached != actual.destinationReached {
+		t.Errorf("Expected destinationReached %t; Actual destinationReached %t", expected.destinationReached, actual.destinationReached)
 	}
 }
 
