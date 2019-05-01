@@ -1,7 +1,9 @@
-package route
+package vehicle
 
 import (
 	"fmt"
+	"math"
+	"strings"
 	"time"
 )
 
@@ -26,8 +28,33 @@ type Coordinate struct {
 	Lon float64
 }
 
+func (c *Coordinate) DistanceTo(other *Coordinate) float64 {
+	earthRadius := 6371000.0 // metres
+	φ1 := toRadians(c.Lat)
+	φ2 := toRadians(other.Lat)
+	Δφ := toRadians(other.Lat - c.Lat)
+	Δλ := toRadians(other.Lon - c.Lon)
+	a := math.Sin(Δφ/2)*math.Sin(Δφ/2) +
+		math.Cos(φ1)*math.Cos(φ2)*
+			math.Sin(Δλ/2)*math.Sin(Δλ/2)
+	husten := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+	return earthRadius * husten
+}
+
+func toRadians(degree float64) float64 {
+	return degree * (math.Pi / 180)
+}
+
 func (c *Coordinate) String() string {
 	return fmt.Sprintf("[%f, %f]", c.Lat, c.Lon)
+}
+
+func PointsToCoordinates(coords [][]float64) []Coordinate {
+	result := make([]Coordinate, 0, len(coords))
+	for _, coord := range coords {
+		result = append(result, Coordinate{Lat: coord[0], Lon: coord[1]})
+	}
+	return result
 }
 
 type ChainedCoordinate struct {
@@ -36,9 +63,25 @@ type ChainedCoordinate struct {
 	DistanceToNext float64
 }
 
+func (c *ChainedCoordinate) ToPolyline() string {
+	coordinates := make([]string, 0)
+	current := c
+	coordinates = append(coordinates, current.Coordinate.String())
+	for current.Next != nil {
+		current = current.Next
+		coordinates = append(coordinates, current.Coordinate.String())
+	}
+	result := strings.Join(coordinates, ",")
+	return "[" + result + "]"
+}
+
+func (c *ChainedCoordinate) String() string {
+	return fmt.Sprintf("[%v, distanceToNext: %f, next: %v]", c.Coordinate.String(), c.DistanceToNext, c.Next.Coordinate.String())
+}
+
 type VehicleLocation struct {
-	Location *Coordinate
-	Vehicle  *RoutedVehicle
+	Location  *Coordinate
+	VehicleId int
 }
 
 type RoutedVehicle struct {
@@ -52,22 +95,25 @@ func (v *RoutedVehicle) StartJourney(consumer chan<- VehicleLocation, quit <-cha
 }
 
 func (v *RoutedVehicle) startJourneyWithClock(clock Clock, consumer chan<- VehicleLocation, quit <-chan int) {
-	last := clock.Now()
 	speedMS := v.SpeedKmh / 3.6
 	driveResult := createEmptyResult(v.Waypoints)
+	time.Sleep(10 * time.Second)
+	last := clock.Now()
+	fmt.Printf("%s\n", v.Waypoints.ToPolyline())
+	consumer <- VehicleLocation{Location: driveResult.location, VehicleId: v.Id}
 	for !driveResult.destinationReached {
 		select {
 		case <-quit:
 			close(consumer)
 			return
 		default:
-			clock.Sleep(50 * time.Millisecond)
+			clock.Sleep(40 * time.Millisecond)
 			now := clock.Now()
 			deltaTime := now.Sub(last).Seconds()
 			driven := speedMS * deltaTime
 			driveResult = v.drive(driveResult.lastWp, driveResult.distanceBetween, driven)
 			last = now
-			location := VehicleLocation{Location: driveResult.location, Vehicle: v}
+			location := VehicleLocation{Location: driveResult.location, VehicleId: v.Id}
 			consumer <- location
 		}
 	}
@@ -99,7 +145,7 @@ func (v *RoutedVehicle) drive(lastWp *ChainedCoordinate, distanceBetween float64
 	if wp.Next == nil {
 		return driveResult{location: &Coordinate{Lat: wp.Lat, Lon: wp.Lon}, lastWp: wp, distanceBetween: 0, destinationReached: true}
 	}
-	lambda := (distanceFromLast + currentDistance) / distanceToNext
+	lambda := (distanceFromLast + currentDistance) / wp.DistanceToNext
 	deltaX := wp.Next.Lat - wp.Lat
 	deltaY := wp.Next.Lon - wp.Lon
 	lat := wp.Lat + lambda*deltaX
