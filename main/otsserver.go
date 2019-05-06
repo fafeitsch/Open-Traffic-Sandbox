@@ -100,9 +100,7 @@ func main() {
 	webinterface := server.NewWebInterface()
 	http.HandleFunc("/sockets", webinterface.GetWebSocketHandler())
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "websockets.html")
-	})
+	http.Handle("/", http.FileServer(http.Dir("../webfrontend/dist/webfrontend")))
 
 	go func() {
 		for location := range consumer {
