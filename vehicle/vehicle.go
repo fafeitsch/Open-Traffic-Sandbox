@@ -24,8 +24,8 @@ func (s *SystemClock) Sleep(d time.Duration) {
 }
 
 type Coordinate struct {
-	Lat float64
-	Lon float64
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
 }
 
 func (c *Coordinate) DistanceTo(other *Coordinate) float64 {
@@ -80,8 +80,8 @@ func (c *ChainedCoordinate) String() string {
 }
 
 type VehicleLocation struct {
-	Location  *Coordinate
-	VehicleId int
+	Location  [2]float64 `json:"loc"`
+	VehicleId int        `json:"id"`
 }
 
 type RoutedVehicle struct {
@@ -100,7 +100,7 @@ func (v *RoutedVehicle) startJourneyWithClock(clock Clock, consumer chan<- Vehic
 	time.Sleep(10 * time.Second)
 	last := clock.Now()
 	fmt.Printf("%s\n", v.Waypoints.ToPolyline())
-	consumer <- VehicleLocation{Location: driveResult.location, VehicleId: v.Id}
+	consumer <- VehicleLocation{Location: [2]float64{v.Waypoints.Lat, v.Waypoints.Lon}, VehicleId: v.Id}
 	for !driveResult.destinationReached {
 		select {
 		case <-quit:
@@ -113,7 +113,7 @@ func (v *RoutedVehicle) startJourneyWithClock(clock Clock, consumer chan<- Vehic
 			driven := speedMS * deltaTime
 			driveResult = v.drive(driveResult.lastWp, driveResult.distanceBetween, driven)
 			last = now
-			location := VehicleLocation{Location: driveResult.location, VehicleId: v.Id}
+			location := VehicleLocation{Location: [2]float64{driveResult.location.Lat, driveResult.location.Lon}, VehicleId: v.Id}
 			consumer <- location
 		}
 	}

@@ -78,12 +78,10 @@ func TestRoutedVehicle_StartJourney(t *testing.T) {
 				events = events + 1
 			}
 		}
-		if events != 2216 {
+		if events != 2217 {
 			t.Errorf("2216 events should be generated but there were %d events.", events)
 		}
 	}()
-	time.Sleep(1000 * time.Millisecond)
-	quit <- 1
 	wg.Wait()
 }
 
@@ -99,7 +97,7 @@ func staticRouteService([]Coordinate) ([]Coordinate, float64, error) {
 }
 
 var expectedLocations = []Coordinate{
-	{Lat: 0, Lon: 0},
+	{Lat: 49.800090, Lon: 9.984000},
 }
 
 func TestRoutedVehicle_StartJourney2(t *testing.T) {

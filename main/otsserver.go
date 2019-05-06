@@ -87,7 +87,7 @@ func main() {
 
 	channels := make([]<-chan vehicle2.VehicleLocation, 0, len(routedVehicles))
 	quitChannels := make([]chan int, 0, len(routedVehicles))
-	for _, routedVehicle := range routedVehicles[1:] {
+	for _, routedVehicle := range routedVehicles[0:] {
 		routedVehicle := routedVehicle
 		channel := make(chan vehicle2.VehicleLocation)
 		quitChannel := make(chan int)
