@@ -1,4 +1,4 @@
-package vehicle
+package routing
 
 import (
 	"encoding/json"
@@ -23,7 +23,7 @@ func (f *FixedIntervalClock) Sleep(d time.Duration) {
 }
 
 func TestPointsToCoordinates(t *testing.T) {
-	coords := [][]float64{[]float64{1, 2}, []float64{3, 4}, []float64{5, 6}}
+	coords := [][]float64{{1, 2}, {3, 4}, {5, 6}}
 	actual := PointsToCoordinates(coords)
 	if len(actual) != len(coords) {
 		t.Errorf("Expectd length %d, but was %d", len(coords), len(actual))
@@ -119,7 +119,7 @@ func TestRoutedVehicle_StartJourney2(t *testing.T) {
 		defer wg.Done()
 		location, open := <-receiver
 		if counter < len(expectedLocations) {
-			err := assertSameCoordinate(&expectedLocations[counter], location.Location)
+			err := assertSameCoordinate(&expectedLocations[counter], newCoordinate(location.Location))
 			if err != nil {
 				t.Errorf("Error in step %d: %v", counter, err)
 			}
@@ -129,7 +129,7 @@ func TestRoutedVehicle_StartJourney2(t *testing.T) {
 			location, o := <-receiver
 			if o {
 				if counter < len(expectedLocations) {
-					err := assertSameCoordinate(&expectedLocations[counter], location.Location)
+					err := assertSameCoordinate(&expectedLocations[counter], newCoordinate(location.Location))
 					if err != nil {
 						t.Errorf("Error in step %d: %v", counter, err)
 					}

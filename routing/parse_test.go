@@ -1,4 +1,4 @@
-package vehicle
+package routing
 
 import (
 	"github.com/twpayne/go-polyline"

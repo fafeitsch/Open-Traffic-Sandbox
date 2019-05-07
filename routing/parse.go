@@ -1,4 +1,4 @@
-package vehicle
+package routing
 
 import (
 	"encoding/json"
@@ -19,7 +19,7 @@ type vehicle struct {
 func (v *vehicle) toRoutedVehicle(routeService func([]Coordinate) ([]Coordinate, float64, error)) (RoutedVehicle, error) {
 	geometry, _, err := routeService(v.Coordinates)
 	if err != nil {
-		return RoutedVehicle{}, fmt.Errorf("could not get route for vehicle: %v", err)
+		return RoutedVehicle{}, fmt.Errorf("could not get route for routing: %v", err)
 	}
 	cumulatedDistance := 0.0
 	max := 0.0
@@ -45,8 +45,6 @@ type simpleConfig struct {
 
 func parseJson(reader io.Reader) (simpleConfig, error) {
 	bytes, err := ioutil.ReadAll(reader)
-	//content := string(bytes)
-	//fmt.Printf("%s\n", content)
 	if err != nil {
 		return simpleConfig{}, fmt.Errorf("could not read file: %v", err)
 	}

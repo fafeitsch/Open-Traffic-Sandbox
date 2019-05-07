@@ -1,4 +1,4 @@
-package vehicle
+package routing
 
 import (
 	"fmt"
@@ -29,16 +29,24 @@ type Coordinate struct {
 }
 
 func (c *Coordinate) DistanceTo(other *Coordinate) float64 {
-	earthRadius := 6371000.0 // metres
-	φ1 := toRadians(c.Lat)
-	φ2 := toRadians(other.Lat)
-	Δφ := toRadians(other.Lat - c.Lat)
-	Δλ := toRadians(other.Lon - c.Lon)
-	a := math.Sin(Δφ/2)*math.Sin(Δφ/2) +
-		math.Cos(φ1)*math.Cos(φ2)*
-			math.Sin(Δλ/2)*math.Sin(Δλ/2)
-	husten := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-	return earthRadius * husten
+	earthRadius := 6371000.0 // meters
+	delta1 := toRadians(c.Lat)
+	delta2 := toRadians(other.Lat)
+	deltaPhi := toRadians(other.Lat - c.Lat)
+	deltaLambda := toRadians(other.Lon - c.Lon)
+	a := math.Sin(deltaPhi/2)*math.Sin(deltaPhi/2) +
+		math.Cos(delta1)*math.Cos(delta2)*
+			math.Sin(deltaLambda/2)*math.Sin(deltaLambda/2)
+	atan := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+	return earthRadius * atan
+}
+
+func (c *Coordinate) toLatLngArray() [2]float64 {
+	return [2]float64{c.Lat, c.Lon}
+}
+
+func newCoordinate(latLngArray [2]float64) *Coordinate {
+	return &Coordinate{latLngArray[0], latLngArray[1]}
 }
 
 func toRadians(degree float64) float64 {

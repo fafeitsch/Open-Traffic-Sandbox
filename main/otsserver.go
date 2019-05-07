@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/Karmadon/gosrm"
+	"github.com/fafeitsch/Open_Traffic_Sandbox/routing"
 	"github.com/fafeitsch/Open_Traffic_Sandbox/server"
-	vehicle2 "github.com/fafeitsch/Open_Traffic_Sandbox/vehicle"
 	geo "github.com/paulmach/go.geo"
 	"github.com/twpayne/go-polyline"
 	"net/http"
@@ -17,7 +17,7 @@ type settings struct {
 }
 
 type vehicle struct {
-	coordinates []vehicle2.Coordinate
+	coordinates []routing.Coordinate
 }
 
 type simpleInput struct {
@@ -42,7 +42,7 @@ func newRouteService() RouteService {
 	return RouteService{client: client}
 }
 
-func (r *RouteService) queryRoute(waypoints []vehicle2.Coordinate) ([]vehicle2.Coordinate, float64, error) {
+func (r *RouteService) queryRoute(waypoints []routing.Coordinate) ([]routing.Coordinate, float64, error) {
 	pointset := geo.NewPointSet()
 	for index, waypoints := range waypoints {
 		point := geo.NewPoint(waypoints.Lon, waypoints.Lat)
@@ -63,7 +63,7 @@ func (r *RouteService) queryRoute(waypoints []vehicle2.Coordinate) ([]vehicle2.C
 	if err != nil {
 		return nil, 0, fmt.Errorf("Could not decode polyline geometry: %v", err)
 	}
-	result := vehicle2.PointsToCoordinates(coords)
+	result := routing.PointsToCoordinates(coords)
 	return result, route.Distance, nil
 }
 
@@ -78,18 +78,18 @@ func main() {
 		_ = jsonFile.Close()
 	}()
 	routeService := newRouteService()
-	routedVehicles, err := vehicle2.LoadRoutedVehicles(jsonFile, routeService.queryRoute)
+	routedVehicles, err := routing.LoadRoutedVehicles(jsonFile, routeService.queryRoute)
 
 	if err != nil {
 		fmt.Printf("Could not query routes for vehicles: %v", err)
 		os.Exit(1)
 	}
 
-	channels := make([]<-chan vehicle2.VehicleLocation, 0, len(routedVehicles))
+	channels := make([]<-chan routing.VehicleLocation, 0, len(routedVehicles))
 	quitChannels := make([]chan int, 0, len(routedVehicles))
 	for _, routedVehicle := range routedVehicles[0:] {
 		routedVehicle := routedVehicle
-		channel := make(chan vehicle2.VehicleLocation)
+		channel := make(chan routing.VehicleLocation)
 		quitChannel := make(chan int)
 		channels = append(channels, channel)
 		quitChannels = append(quitChannels, quitChannel)
@@ -111,7 +111,7 @@ func main() {
 	http.ListenAndServe(":8000", nil)
 }
 
-func mergeChannels(channels []<-chan vehicle2.VehicleLocation) <-chan vehicle2.VehicleLocation {
+func mergeChannels(channels []<-chan routing.VehicleLocation) <-chan routing.VehicleLocation {
 	if len(channels) == 0 {
 		return nil
 	}
@@ -124,8 +124,8 @@ func mergeChannels(channels []<-chan vehicle2.VehicleLocation) <-chan vehicle2.V
 	return merge(channel1, channel2)
 }
 
-func merge(a, b <-chan vehicle2.VehicleLocation) <-chan vehicle2.VehicleLocation {
-	c := make(chan vehicle2.VehicleLocation)
+func merge(a, b <-chan routing.VehicleLocation) <-chan routing.VehicleLocation {
+	c := make(chan routing.VehicleLocation)
 	go func() {
 		defer close(c)
 		for a != nil || b != nil {
