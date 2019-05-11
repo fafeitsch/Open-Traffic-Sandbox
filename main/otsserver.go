@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/Karmadon/gosrm"
+	channels2 "github.com/fafeitsch/Open_Traffic_Sandbox/channels"
 	"github.com/fafeitsch/Open_Traffic_Sandbox/routing"
 	"github.com/fafeitsch/Open_Traffic_Sandbox/server"
 	geo "github.com/paulmach/go.geo"
@@ -95,7 +96,7 @@ func main() {
 		quitChannels = append(quitChannels, quitChannel)
 		go routedVehicle.StartJourney(channel, quitChannel)
 	}
-	consumer := mergeChannels(channels)
+	consumer := channels2.Merge(channels)
 
 	webinterface := server.NewWebInterface()
 	http.HandleFunc("/sockets", webinterface.GetWebSocketHandler())
@@ -109,41 +110,4 @@ func main() {
 	}()
 
 	http.ListenAndServe(":8000", nil)
-}
-
-func mergeChannels(channels []<-chan routing.VehicleLocation) <-chan routing.VehicleLocation {
-	if len(channels) == 0 {
-		return nil
-	}
-	if len(channels) == 1 {
-		return channels[0]
-	}
-	m := len(channels) / 2
-	channel1 := mergeChannels(channels[:m])
-	channel2 := mergeChannels(channels[m:])
-	return merge(channel1, channel2)
-}
-
-func merge(a, b <-chan routing.VehicleLocation) <-chan routing.VehicleLocation {
-	c := make(chan routing.VehicleLocation)
-	go func() {
-		defer close(c)
-		for a != nil || b != nil {
-			select {
-			case v, ok := <-a:
-				if !ok {
-					a = nil
-					continue
-				}
-				c <- v
-			case v, ok := <-b:
-				if !ok {
-					b = nil
-					continue
-				}
-				c <- v
-			}
-		}
-	}()
-	return c
 }
