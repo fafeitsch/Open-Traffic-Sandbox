@@ -105,7 +105,7 @@ func TestRoutedVehicle_StartJourney2(t *testing.T) {
 	clock.interval = 502
 	receiver := make(chan VehicleLocation, 1)
 	quit := make(chan int, 1)
-	rawVehicle := vehicle{Coordinates: nil, Id: 82}
+	rawVehicle := vehicle{Coordinates: nil, Id: "82"}
 	car, _ := rawVehicle.toRoutedVehicle(staticRouteService)
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -153,7 +153,7 @@ func createSampleVehicle() (ChainedCoordinate, ChainedCoordinate, ChainedCoordin
 	cc3 := ChainedCoordinate{Coordinate: c8_2, Next: &cc4, DistanceToNext: 700}
 	cc2 := ChainedCoordinate{Coordinate: c35_35, Next: &cc3, DistanceToNext: 300}
 	cc1 := ChainedCoordinate{Coordinate: c1_1, Next: &cc2, DistanceToNext: 500}
-	vehicle := RoutedVehicle{Waypoints: &cc1, SpeedKmh: 50, Id: 4242}
+	vehicle := RoutedVehicle{Waypoints: &cc1, SpeedKmh: 50, Id: "4242"}
 	return cc5, cc4, cc2, cc1, vehicle
 }
 

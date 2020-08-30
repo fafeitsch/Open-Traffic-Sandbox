@@ -23,3 +23,5 @@ Most probably there are some broken test cases and other bugs, I am working on c
 License
 ------------------------------------
 See the LICENSE file.
+
+This repository contains data derived from Open Street Map (stops.geojson). The data in this file is licensed under: © OpenStreetMap contributors.
