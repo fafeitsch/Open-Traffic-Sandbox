@@ -8,20 +8,6 @@ import (
 	"time"
 )
 
-type FixedIntervalClock struct {
-	time     int64
-	interval int64
-}
-
-func (f *FixedIntervalClock) Now() time.Time {
-	f.time = f.time + f.interval
-	return time.Unix(0, f.time*1000*1000)
-}
-
-func (f *FixedIntervalClock) Sleep(d time.Duration) {
-
-}
-
 func TestPointsToCoordinates(t *testing.T) {
 	coords := [][]float64{{1, 2}, {3, 4}, {5, 6}}
 	actual := PointsToCoordinates(coords)
@@ -56,17 +42,19 @@ func TestCoordinate_DistanceTo(t *testing.T) {
 }
 
 func TestRoutedVehicle_StartJourney(t *testing.T) {
-	clock := FixedIntervalClock{}
-	clock.interval = 52
 	receiver := make(chan VehicleLocation, 1)
-	quit := make(chan int, 1)
 	_, _, _, _, vehicle := createSampleVehicle()
-	var wg sync.WaitGroup
-	wg.Add(1)
+	ticker := make(chan time.Time)
 	go func() {
-		defer wg.Done()
-		vehicle.startJourneyWithClock(&clock, receiver, quit)
+		now := time.Now()
+		for i := 0; i < 3000; i++ {
+			ticker <- now
+			now = now.Add(40 * time.Millisecond)
+		}
+		close(ticker)
 	}()
+	vehicle.HeartBeat = ticker
+	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -78,10 +66,11 @@ func TestRoutedVehicle_StartJourney(t *testing.T) {
 				events = events + 1
 			}
 		}
-		if events != 2217 {
+		if events != 2882 {
 			t.Errorf("2216 events should be generated but there were %d events.", events)
 		}
 	}()
+	vehicle.StartJourney(receiver)
 	wg.Wait()
 }
 
@@ -101,19 +90,21 @@ var expectedLocations = []Coordinate{
 }
 
 func TestRoutedVehicle_StartJourney2(t *testing.T) {
-	clock := FixedIntervalClock{}
-	clock.interval = 502
 	receiver := make(chan VehicleLocation, 1)
-	quit := make(chan int, 1)
 	rawVehicle := vehicle{Coordinates: nil, Id: "82"}
 	car, _ := rawVehicle.toRoutedVehicle(staticRouteService)
-	var wg sync.WaitGroup
-	wg.Add(1)
-	counter := 0
+	ticker := make(chan time.Time)
 	go func() {
-		defer wg.Done()
-		car.startJourneyWithClock(&clock, receiver, quit)
+		now := time.Now()
+		for i := 0; i < 3000; i++ {
+			ticker <- now
+			now = now.Add(40 * time.Millisecond)
+		}
+		close(ticker)
 	}()
+	car.HeartBeat = ticker
+	var wg sync.WaitGroup
+	counter := 0
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -139,6 +130,7 @@ func TestRoutedVehicle_StartJourney2(t *testing.T) {
 			open = o
 		}
 	}()
+	car.StartJourney(receiver)
 	wg.Wait()
 }
 

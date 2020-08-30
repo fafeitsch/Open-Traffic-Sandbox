@@ -4,13 +4,9 @@ import (
 	"fmt"
 )
 
-type settings struct {
-	Infinite bool `json:"infinite"`
-}
-
 type vehicle struct {
-	Id          string       `json:"id"`
-	Coordinates []Coordinate `json:"coordinates"`
+	Id          string
+	Coordinates []Coordinate
 }
 
 func (v *vehicle) toRoutedVehicle(routeService func([]Coordinate) ([]Coordinate, float64, error)) (RoutedVehicle, error) {

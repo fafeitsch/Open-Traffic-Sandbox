@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
@@ -32,14 +33,13 @@ func main() {
 	}
 
 	channels := make([]<-chan routing.VehicleLocation, 0, len(routedVehicles))
-	quitChannels := make([]chan int, 0, len(routedVehicles))
 	for _, routedVehicle := range routedVehicles[0:] {
+		ticker := time.NewTicker(40 * time.Millisecond)
 		routedVehicle := routedVehicle
+		routedVehicle.HeartBeat = ticker.C
 		channel := make(chan routing.VehicleLocation)
-		quitChannel := make(chan int)
 		channels = append(channels, channel)
-		quitChannels = append(quitChannels, quitChannel)
-		go routedVehicle.StartJourney(channel, quitChannel)
+		go routedVehicle.StartJourney(channel)
 	}
 	consumer := channels2.Merge(channels)
 

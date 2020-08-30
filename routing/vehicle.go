@@ -7,22 +7,6 @@ import (
 	"time"
 )
 
-type Clock interface {
-	Now() time.Time
-	Sleep(d time.Duration)
-}
-
-type SystemClock struct {
-}
-
-func (s *SystemClock) Now() time.Time {
-	return time.Now()
-}
-
-func (s *SystemClock) Sleep(d time.Duration) {
-	time.Sleep(d)
-}
-
 type Coordinate struct {
 	Lat float64 `json:"lat"`
 	Lon float64 `json:"lon"`
@@ -96,35 +80,33 @@ type RoutedVehicle struct {
 	Waypoints *ChainedCoordinate
 	SpeedKmh  float64
 	Id        string
+	HeartBeat <-chan time.Time
 }
 
-func (v *RoutedVehicle) StartJourney(consumer chan<- VehicleLocation, quit <-chan int) {
-	v.startJourneyWithClock(&SystemClock{}, consumer, quit)
-}
-
-func (v *RoutedVehicle) startJourneyWithClock(clock Clock, consumer chan<- VehicleLocation, quit <-chan int) {
+func (v *RoutedVehicle) StartJourney(consumer chan<- VehicleLocation) {
 	speedMS := v.SpeedKmh / 3.6
 	driveResult := createEmptyResult(v.Waypoints)
-	time.Sleep(10 * time.Second)
-	last := clock.Now()
+	last := <-v.HeartBeat
 	consumer <- VehicleLocation{Location: [2]float64{v.Waypoints.Lat, v.Waypoints.Lon}, VehicleId: v.Id}
-	for !driveResult.destinationReached {
+	for {
 		select {
-		case <-quit:
-			close(consumer)
-			return
-		default:
-			clock.Sleep(40 * time.Millisecond)
-			now := clock.Now()
+		case now, ok := <-v.HeartBeat:
+			if !ok {
+				close(consumer)
+				return
+			}
 			deltaTime := now.Sub(last).Seconds()
 			driven := speedMS * deltaTime
 			driveResult = v.drive(driveResult.lastWp, driveResult.distanceBetween, driven)
 			last = now
 			location := VehicleLocation{Location: [2]float64{driveResult.location.Lat, driveResult.location.Lon}, VehicleId: v.Id}
 			consumer <- location
+			if driveResult.destinationReached {
+				close(consumer)
+				return
+			}
 		}
 	}
-	close(consumer)
 }
 
 type driveResult struct {
