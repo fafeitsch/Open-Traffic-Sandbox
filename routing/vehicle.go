@@ -12,6 +12,27 @@ type Coordinate struct {
 	Lon float64 `json:"lon"`
 }
 
+type Coordinates []Coordinate
+
+func (c Coordinates) Chain() *ChainedCoordinate {
+	geometry := c
+	cumulatedDistance := 0.0
+	max := 0.0
+	firstChainedCoordinate := ChainedCoordinate{Coordinate: geometry[0]}
+	coordinate := &firstChainedCoordinate
+	for _, c := range geometry[1:] {
+		nextChainedCoordinate := ChainedCoordinate{Coordinate: c}
+		coordinate.DistanceToNext = coordinate.DistanceTo(&c)
+		cumulatedDistance = cumulatedDistance + coordinate.DistanceToNext
+		coordinate.Next = &nextChainedCoordinate
+		if coordinate.DistanceToNext > max {
+			max = coordinate.DistanceToNext
+		}
+		coordinate = coordinate.Next
+	}
+	return &firstChainedCoordinate
+}
+
 func (c *Coordinate) DistanceTo(other *Coordinate) float64 {
 	earthRadius := 6371000.0 // meters
 	delta1 := toRadians(c.Lat)
@@ -23,10 +44,6 @@ func (c *Coordinate) DistanceTo(other *Coordinate) float64 {
 			math.Sin(deltaLambda/2)*math.Sin(deltaLambda/2)
 	atan := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 	return earthRadius * atan
-}
-
-func (c *Coordinate) toLatLngArray() [2]float64 {
-	return [2]float64{c.Lat, c.Lon}
 }
 
 func newCoordinate(latLngArray [2]float64) *Coordinate {
