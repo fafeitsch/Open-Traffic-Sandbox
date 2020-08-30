@@ -89,13 +89,13 @@ func (c *ChainedCoordinate) String() string {
 
 type VehicleLocation struct {
 	Location  [2]float64 `json:"loc"`
-	VehicleId int        `json:"id"`
+	VehicleId string     `json:"id"`
 }
 
 type RoutedVehicle struct {
 	Waypoints *ChainedCoordinate
 	SpeedKmh  float64
-	Id        int
+	Id        string
 }
 
 func (v *RoutedVehicle) StartJourney(consumer chan<- VehicleLocation, quit <-chan int) {

@@ -12,7 +12,7 @@ type settings struct {
 }
 
 type vehicle struct {
-	Id          int          `json:"id"`
+	Id          string       `json:"id"`
 	Coordinates []Coordinate `json:"coordinates"`
 }
 
