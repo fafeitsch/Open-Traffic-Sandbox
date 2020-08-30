@@ -107,7 +107,6 @@ func (v *RoutedVehicle) startJourneyWithClock(clock Clock, consumer chan<- Vehic
 	driveResult := createEmptyResult(v.Waypoints)
 	time.Sleep(10 * time.Second)
 	last := clock.Now()
-	fmt.Printf("%s\n", v.Waypoints.ToPolyline())
 	consumer <- VehicleLocation{Location: [2]float64{v.Waypoints.Lat, v.Waypoints.Lon}, VehicleId: v.Id}
 	for !driveResult.destinationReached {
 		select {

@@ -1,9 +1,9 @@
 package channels
 
-import "github.com/fafeitsch/Open_Traffic_Sandbox/routing"
+import "github.com/fafeitsch/Open-Traffic-Sandbox/routing"
 
-//Merge takes a slice of channels and returns one single channel
-//which emits data put into any of the input channels.
+// Merge takes a slice of channels and returns one single channel
+// which emits data put into any of the input channels.
 func Merge(channels []<-chan routing.VehicleLocation) <-chan routing.VehicleLocation {
 	if len(channels) == 0 {
 		return nil
@@ -14,10 +14,10 @@ func Merge(channels []<-chan routing.VehicleLocation) <-chan routing.VehicleLoca
 	m := len(channels) / 2
 	channel1 := Merge(channels[:m])
 	channel2 := Merge(channels[m:])
-	return mergeTowChannels(channel1, channel2)
+	return mergeTwoChannels(channel1, channel2)
 }
 
-func mergeTowChannels(a, b <-chan routing.VehicleLocation) <-chan routing.VehicleLocation {
+func mergeTwoChannels(a, b <-chan routing.VehicleLocation) <-chan routing.VehicleLocation {
 	c := make(chan routing.VehicleLocation)
 	go func() {
 		defer close(c)

@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/Karmadon/gosrm"
-	channels2 "github.com/fafeitsch/Open_Traffic_Sandbox/channels"
-	"github.com/fafeitsch/Open_Traffic_Sandbox/routing"
-	"github.com/fafeitsch/Open_Traffic_Sandbox/server"
+	channels2 "github.com/fafeitsch/Open-Traffic-Sandbox/channels"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/routing"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/server"
+	"github.com/karmadon/gosrm"
 	geo "github.com/paulmach/go.geo"
 	"github.com/twpayne/go-polyline"
 	"net/http"
@@ -36,7 +36,7 @@ func newRouteService() RouteService {
 		Url:            localUrl,
 		Service:        gosrm.ServiceRoute,
 		Version:        gosrm.VersionFirst,
-		Profile:        gosrm.ProfileDrivig,
+		Profile:        gosrm.ProfileDriving,
 		RequestTimeout: 5,
 	}
 	client := gosrm.NewClient(options)
@@ -69,7 +69,6 @@ func (r *RouteService) queryRoute(waypoints []routing.Coordinate) ([]routing.Coo
 }
 
 func main() {
-
 	jsonFile, err := os.Open(os.Args[1])
 	if err != nil {
 		fmt.Printf("Could not read input file %s: %v", os.Args[1], err)

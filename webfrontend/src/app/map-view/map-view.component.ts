@@ -23,7 +23,7 @@ export class MapViewComponent implements OnInit {
 
     this.vehicleLocationService.locations.subscribe(location => {
         if (!markers[location.vehicleId]) {
-          map.setView(location.coordinate)
+          map.setView(location.coordinate);
           const marker = L.circleMarker({lat: location.coordinate[0], lon: location.coordinate[1]}, {fillOpacity: 1}).addTo(map);
           markers[location.vehicleId] = marker;
         }

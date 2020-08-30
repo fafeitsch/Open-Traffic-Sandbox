@@ -1,7 +1,7 @@
 package channels
 
 import (
-	"github.com/fafeitsch/Open_Traffic_Sandbox/routing"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/routing"
 	"sync"
 	"testing"
 )
