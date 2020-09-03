@@ -93,35 +93,76 @@ type VehicleLocation struct {
 	VehicleId string     `json:"id"`
 }
 
-type RoutedVehicle struct {
-	Waypoints *ChainedCoordinate
-	SpeedKmh  float64
+type Line struct {
 	Id        string
-	HeartBeat <-chan time.Time
+	Name      string
+	Waypoints Coordinates
+}
+
+type Assignment struct {
+	Start       time.Time
+	Line        *Line
+	StartFrom   *Coordinate
+	GoTo        *Coordinate
+	precomputed *ChainedCoordinate
+}
+
+func (a *Assignment) activate() activeAssignment {
+	if a.Line != nil {
+		return activeAssignment{start: a.Start, waypoints: a.Line.Waypoints.Chain()}
+	} else if a.StartFrom != nil {
+		return activeAssignment{start: a.Start, waypoints: Coordinates([]Coordinate{*a.GoTo}).Chain()}
+	} else if a.precomputed != nil {
+		return activeAssignment{start: a.Start, waypoints: a.precomputed}
+	}
+	panic("assignment is invalid, either line, startFrom, or precomputed must be != nil")
+}
+
+type activeAssignment struct {
+	start     time.Time
+	waypoints *ChainedCoordinate
+}
+
+type RoutedVehicle struct {
+	SpeedKmh         float64
+	Id               string
+	HeartBeat        <-chan time.Time
+	Assignments      []Assignment
+	activeAssignment activeAssignment
 }
 
 func (v *RoutedVehicle) StartJourney(consumer chan<- VehicleLocation) {
+	if len(v.Assignments) == 0 {
+		return
+	}
 	speedMS := v.SpeedKmh / 3.6
-	driveResult := createEmptyResult(v.Waypoints)
+	v.activeAssignment = v.Assignments[0].activate()
+	v.Assignments = v.Assignments[1:]
+	driveResult := createEmptyResult(v.activeAssignment.waypoints)
 	last := <-v.HeartBeat
-	consumer <- VehicleLocation{Location: [2]float64{v.Waypoints.Lat, v.Waypoints.Lon}, VehicleId: v.Id}
+	consumer <- VehicleLocation{Location: [2]float64{v.activeAssignment.waypoints.Lat, v.activeAssignment.waypoints.Lon}, VehicleId: v.Id}
 	for {
-		select {
-		case now, ok := <-v.HeartBeat:
-			if !ok {
+		now, ok := <-v.HeartBeat
+		if !ok {
+			close(consumer)
+			return
+		}
+		if v.activeAssignment.start.After(now) {
+			continue
+		}
+		deltaTime := now.Sub(last).Seconds()
+		driven := speedMS * deltaTime
+		driveResult = v.drive(driveResult.lastWp, driveResult.distanceBetween, driven)
+		last = now
+		location := VehicleLocation{Location: [2]float64{driveResult.location.Lat, driveResult.location.Lon}, VehicleId: v.Id}
+		consumer <- location
+		if driveResult.destinationReached {
+			if len(v.Assignments) == 0 {
 				close(consumer)
 				return
 			}
-			deltaTime := now.Sub(last).Seconds()
-			driven := speedMS * deltaTime
-			driveResult = v.drive(driveResult.lastWp, driveResult.distanceBetween, driven)
-			last = now
-			location := VehicleLocation{Location: [2]float64{driveResult.location.Lat, driveResult.location.Lon}, VehicleId: v.Id}
-			consumer <- location
-			if driveResult.destinationReached {
-				close(consumer)
-				return
-			}
+			v.activeAssignment = v.Assignments[0].activate()
+			v.Assignments = v.Assignments[1:]
 		}
 	}
 }

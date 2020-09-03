@@ -18,9 +18,14 @@ type Scenario struct {
 }
 
 type Line struct {
-	Id    string
-	Name  string
-	Stops []LineStop
+	Id        string
+	Name      string
+	Stops     []LineStop
+	waypoints routing.Coordinates
+}
+
+func (l *Line) toRoutingLine() *routing.Line {
+	return &routing.Line{Id: l.Id, Name: l.Name, Waypoints: l.waypoints}
 }
 
 type LineStop struct {
@@ -31,15 +36,35 @@ type LineStop struct {
 
 type Vehicle struct {
 	Id          string
-	Assignments []Assignment
+	Assignments Assignments
 }
 
 type Assignment struct {
 	Start     time.Time
-	End       time.Time
 	Line      *string
 	StartFrom *routing.Coordinate
 	GoTo      *routing.Coordinate
+}
+
+type Assignments []Assignment
+
+func (a Assignments) toRoutingAssignments(lines map[string]Line) ([]routing.Assignment, error) {
+	result := make([]routing.Assignment, 0, len(a))
+	for _, assignment := range a {
+		var res routing.Assignment
+		if assignment.Line != nil {
+			line, ok := lines[*assignment.Line]
+			if !ok {
+				return nil, fmt.Errorf("line with name %s is not defined", *assignment.Line)
+			}
+			res = routing.Assignment{Line: line.toRoutingLine()}
+		} else if assignment.GoTo != nil {
+			res = routing.Assignment{GoTo: assignment.GoTo}
+		}
+		res.Start = assignment.Start
+		result = append(result, res)
+	}
+	return result, nil
 }
 
 func Load(scenarioReader io.Reader, stopReader io.Reader) ([]routing.RoutedVehicle, error) {
@@ -73,22 +98,20 @@ func Load(scenarioReader io.Reader, stopReader io.Reader) ([]routing.RoutedVehic
 
 	result := make([]routing.RoutedVehicle, 0, len(scenario.Vehicles))
 	for _, vehicle := range scenario.Vehicles {
-		if len(vehicle.Assignments) != 1 || vehicle.Assignments[0].Line == nil {
-			continue
+		assignments, err := vehicle.Assignments.toRoutingAssignments(lines)
+		if err != nil {
+			return nil, fmt.Errorf("could not build assignments for vehicle \"%s\"", vehicle.Id)
 		}
-		line, ok := lines[*vehicle.Assignments[0].Line]
-		if !ok {
-			return nil, fmt.Errorf("vehicle contains unkown line \"%s\"", *vehicle.Assignments[0].Line)
-		}
-		result = append(result, newRoutedVehicle(line, vehicle.Id))
+		created := routing.RoutedVehicle{Id: vehicle.Id, Assignments: assignments, SpeedKmh: 20}
+		result = append(result, created)
 	}
 
 	return result, nil
 }
 
-func computeLines(lines []Line, stops map[string]routing.Coordinate) (map[string][]routing.Coordinate, error) {
+func computeLines(lines []Line, stops map[string]routing.Coordinate) (map[string]Line, error) {
 	service := routing.NewRouteService()
-	result := make(map[string][]routing.Coordinate)
+	result := make(map[string]Line)
 	unknownStops := make([]string, 0, 0)
 	for _, line := range lines {
 		stopCoordinates := make([]routing.Coordinate, 0, len(line.Stops))
@@ -104,28 +127,11 @@ func computeLines(lines []Line, stops map[string]routing.Coordinate) (map[string
 		if err != nil {
 			return nil, fmt.Errorf("could not find waypoints for line \"%s\": %v", line.Id, err)
 		}
-		result[line.Id] = waypoints
+		line.waypoints = waypoints
+		result[line.Id] = line
 	}
 	if len(unknownStops) != 0 {
 		return nil, fmt.Errorf("could not identify the following stops: %v", strings.Join(unknownStops, ", "))
 	}
 	return result, nil
-}
-
-func newRoutedVehicle(geometry []routing.Coordinate, id string) routing.RoutedVehicle {
-	cumulatedDistance := 0.0
-	max := 0.0
-	firstChainedCoordinate := routing.ChainedCoordinate{Coordinate: geometry[0]}
-	coordinate := &firstChainedCoordinate
-	for _, c := range geometry[1:] {
-		nextChainedCoordinate := routing.ChainedCoordinate{Coordinate: c}
-		coordinate.DistanceToNext = coordinate.DistanceTo(&c)
-		cumulatedDistance = cumulatedDistance + coordinate.DistanceToNext
-		coordinate.Next = &nextChainedCoordinate
-		if coordinate.DistanceToNext > max {
-			max = coordinate.DistanceToNext
-		}
-		coordinate = coordinate.Next
-	}
-	return routing.RoutedVehicle{Waypoints: &firstChainedCoordinate, Id: id, SpeedKmh: 50}
 }

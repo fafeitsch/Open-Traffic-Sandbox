@@ -69,7 +69,7 @@ func TestRoutedVehicle_StartJourney(t *testing.T) {
 			}
 		}
 		if events != 2882 {
-			t.Errorf("2216 events should be generated but there were %d events.", events)
+			t.Errorf("2882 events should be generated but there were %d events.", events)
 		}
 	}()
 	vehicle.StartJourney(receiver)
@@ -100,7 +100,12 @@ var expectedLocations = []Coordinate{
 
 func TestRoutedVehicle_StartJourney2(t *testing.T) {
 	receiver := make(chan VehicleLocation, 1)
-	car := RoutedVehicle{Waypoints: readWaypoints("testdata/sampleRoute.json").Chain()}
+	car := RoutedVehicle{
+		Assignments: []Assignment{
+			{Line: &Line{Waypoints: readWaypoints("testdata/sampleRoute.json")}},
+		},
+		SpeedKmh: 50,
+	}
 	ticker := make(chan time.Time)
 	go func() {
 		now := time.Now()
@@ -153,7 +158,12 @@ func createSampleVehicle() (ChainedCoordinate, ChainedCoordinate, ChainedCoordin
 	cc3 := ChainedCoordinate{Coordinate: c8_2, Next: &cc4, DistanceToNext: 700}
 	cc2 := ChainedCoordinate{Coordinate: c35_35, Next: &cc3, DistanceToNext: 300}
 	cc1 := ChainedCoordinate{Coordinate: c1_1, Next: &cc2, DistanceToNext: 500}
-	vehicle := RoutedVehicle{Waypoints: &cc1, SpeedKmh: 50, Id: "4242"}
+	vehicle := RoutedVehicle{
+		Assignments: []Assignment{
+			{precomputed: &cc1},
+		},
+		SpeedKmh: 50,
+		Id:       "4242"}
 	return cc5, cc4, cc2, cc1, vehicle
 }
 
