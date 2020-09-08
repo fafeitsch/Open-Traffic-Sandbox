@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	channels2 "github.com/fafeitsch/Open-Traffic-Sandbox/channels"
-	"github.com/fafeitsch/Open-Traffic-Sandbox/definition"
-	"github.com/fafeitsch/Open-Traffic-Sandbox/routing"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/domain"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/osrmclient"
 	"github.com/fafeitsch/Open-Traffic-Sandbox/server"
 	"log"
 	"net/http"
@@ -13,31 +13,16 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 3 {
-		log.Fatalf("missing scenario definition and stop definition file")
-	}
-	scenarioFile, err := os.Open(os.Args[1])
+	vehicles, err := load(os.Args)
 	if err != nil {
-		log.Fatalf("could not read input file: %v", err)
+		log.Fatalf("cannot read scenario data: %v", err)
 	}
-	defer func() { _ = scenarioFile.Close() }()
-	stopFile, err := os.Open(os.Args[2])
-	if err != nil {
-		log.Fatalf("could not read stop file: %v", err)
-	}
-	defer func() { _ = stopFile.Close() }()
-	routedVehicles, err := definition.Load(scenarioFile, stopFile)
-	if err != nil {
-		fmt.Printf("Could not read input file %s: %v", os.Args[1], err)
-		os.Exit(1)
-	}
-
-	channels := make([]<-chan routing.VehicleLocation, 0, len(routedVehicles))
-	for _, routedVehicle := range routedVehicles[0:] {
-		ticker := time.NewTicker(40 * time.Millisecond)
+	channels := make([]<-chan domain.VehicleLocation, 0, len(vehicles))
+	for _, routedVehicle := range vehicles[0:] {
+		ticker := time.NewTicker(100 * time.Millisecond)
 		routedVehicle := routedVehicle
 		routedVehicle.HeartBeat = ticker.C
-		channel := make(chan routing.VehicleLocation)
+		channel := make(chan domain.VehicleLocation)
 		channels = append(channels, channel)
 		go routedVehicle.StartJourney(channel)
 	}
@@ -55,4 +40,29 @@ func main() {
 	}()
 
 	http.ListenAndServe(":8000", nil)
+}
+
+func load(args []string) ([]domain.Vehicle, error) {
+	if len(args) != 3 {
+		log.Fatalf("missing scenario definition and stop definition file")
+	}
+	scenarioFile, err := os.Open(args[1])
+	if err != nil {
+		return nil, fmt.Errorf("could not read input file: %v", err)
+	}
+	defer func() { _ = scenarioFile.Close() }()
+	stopFile, err := os.Open(args[2])
+	if err != nil {
+		return nil, fmt.Errorf("could not read stop file: %v", err)
+	}
+	defer func() { _ = stopFile.Close() }()
+	stops, err := domain.LoadStops(stopFile)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse stop file: %v", err)
+	}
+	vehicles, err := stops.SetupVehicles(osrmclient.NewRouteService(), scenarioFile)
+	if err != nil {
+		return nil, fmt.Errorf("Could not read input file %s: %v", os.Args[1], err)
+	}
+	return vehicles, nil
 }

@@ -1,4 +1,4 @@
-package routing
+package domain
 
 import (
 	"encoding/json"
@@ -31,14 +31,14 @@ func TestCoordinate_DistanceTo(t *testing.T) {
 	c1 := Coordinate{Lat: 49.792778, Lon: 9.938611}
 	c2 := Coordinate{Lat: 49.801389, Lon: 9.935556}
 	expected := 982.2866513649033
-	actual := c1.DistanceTo(&c2)
+	actual := c1.distanceTo(&c2)
 	if expected != actual {
 		t.Errorf("Expected %f, actual %f", expected, actual)
 	}
-	if actual != c2.DistanceTo(&c1) {
+	if actual != c2.distanceTo(&c1) {
 		t.Errorf("Distance is not symmetric")
 	}
-	if c1.DistanceTo(&c1) != 0 {
+	if c1.distanceTo(&c1) != 0 {
 		t.Errorf("Distance to the same coordinate should be zero")
 	}
 }
@@ -100,7 +100,7 @@ var expectedLocations = []Coordinate{
 
 func TestRoutedVehicle_StartJourney2(t *testing.T) {
 	receiver := make(chan VehicleLocation, 1)
-	car := RoutedVehicle{
+	car := Vehicle{
 		Assignments: []Assignment{
 			{Line: &Line{Waypoints: readWaypoints("testdata/sampleRoute.json")}},
 		},
@@ -147,7 +147,7 @@ func TestRoutedVehicle_StartJourney2(t *testing.T) {
 	wg.Wait()
 }
 
-func createSampleVehicle() (ChainedCoordinate, ChainedCoordinate, ChainedCoordinate, ChainedCoordinate, RoutedVehicle) {
+func createSampleVehicle() (ChainedCoordinate, ChainedCoordinate, ChainedCoordinate, ChainedCoordinate, Vehicle) {
 	c1_1 := Coordinate{Lat: 1, Lon: 1}
 	c35_35 := Coordinate{Lat: 3.5, Lon: 3.5}
 	c8_2 := Coordinate{Lat: 8, Lon: 2}
@@ -158,7 +158,7 @@ func createSampleVehicle() (ChainedCoordinate, ChainedCoordinate, ChainedCoordin
 	cc3 := ChainedCoordinate{Coordinate: c8_2, Next: &cc4, DistanceToNext: 700}
 	cc2 := ChainedCoordinate{Coordinate: c35_35, Next: &cc3, DistanceToNext: 300}
 	cc1 := ChainedCoordinate{Coordinate: c1_1, Next: &cc2, DistanceToNext: 500}
-	vehicle := RoutedVehicle{
+	vehicle := Vehicle{
 		Assignments: []Assignment{
 			{precomputed: &cc1},
 		},

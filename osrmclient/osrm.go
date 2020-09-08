@@ -1,7 +1,8 @@
-package routing
+package osrmclient
 
 import (
 	"fmt"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/domain"
 	"github.com/karmadon/gosrm"
 	geo "github.com/paulmach/go.geo"
 	"github.com/twpayne/go-polyline"
@@ -12,7 +13,7 @@ type RouteService struct {
 	client *gosrm.OsrmClient
 }
 
-func NewRouteService() RouteService {
+func NewRouteService() *RouteService {
 	localUrl := url.URL{Host: "http://localhost:5000/"}
 	options := &gosrm.Options{
 		Url:            localUrl,
@@ -22,10 +23,10 @@ func NewRouteService() RouteService {
 		RequestTimeout: 5,
 	}
 	client := gosrm.NewClient(options)
-	return RouteService{client: client}
+	return &RouteService{client: client}
 }
 
-func (r *RouteService) QueryRoute(waypoints []Coordinate) ([]Coordinate, float64, error) {
+func (r *RouteService) QueryRoute(waypoints []domain.Coordinate) ([]domain.Coordinate, float64, error) {
 	pointset := geo.NewPointSet()
 	for index, waypoints := range waypoints {
 		point := geo.NewPoint(waypoints.Lon, waypoints.Lat)
@@ -46,6 +47,6 @@ func (r *RouteService) QueryRoute(waypoints []Coordinate) ([]Coordinate, float64
 	if err != nil {
 		return nil, 0, fmt.Errorf("Could not decode polyline geometry: %v", err)
 	}
-	result := PointsToCoordinates(coords)
+	result := domain.PointsToCoordinates(coords)
 	return result, route.Distance, nil
 }

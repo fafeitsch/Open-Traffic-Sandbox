@@ -1,9 +1,8 @@
-package routing
+package domain
 
 import (
 	"fmt"
 	"math"
-	"strings"
 	"time"
 )
 
@@ -14,7 +13,7 @@ type Coordinate struct {
 
 type Coordinates []Coordinate
 
-func (c Coordinates) Chain() *ChainedCoordinate {
+func (c Coordinates) chain() *ChainedCoordinate {
 	geometry := c
 	cumulatedDistance := 0.0
 	max := 0.0
@@ -22,7 +21,7 @@ func (c Coordinates) Chain() *ChainedCoordinate {
 	coordinate := &firstChainedCoordinate
 	for _, c := range geometry[1:] {
 		nextChainedCoordinate := ChainedCoordinate{Coordinate: c}
-		coordinate.DistanceToNext = coordinate.DistanceTo(&c)
+		coordinate.DistanceToNext = coordinate.distanceTo(&c)
 		cumulatedDistance = cumulatedDistance + coordinate.DistanceToNext
 		coordinate.Next = &nextChainedCoordinate
 		if coordinate.DistanceToNext > max {
@@ -33,7 +32,7 @@ func (c Coordinates) Chain() *ChainedCoordinate {
 	return &firstChainedCoordinate
 }
 
-func (c *Coordinate) DistanceTo(other *Coordinate) float64 {
+func (c *Coordinate) distanceTo(other *Coordinate) float64 {
 	earthRadius := 6371000.0 // meters
 	delta1 := toRadians(c.Lat)
 	delta2 := toRadians(other.Lat)
@@ -72,22 +71,6 @@ type ChainedCoordinate struct {
 	DistanceToNext float64
 }
 
-func (c *ChainedCoordinate) ToPolyline() string {
-	coordinates := make([]string, 0)
-	current := c
-	coordinates = append(coordinates, current.Coordinate.String())
-	for current.Next != nil {
-		current = current.Next
-		coordinates = append(coordinates, current.Coordinate.String())
-	}
-	result := strings.Join(coordinates, ",")
-	return "[" + result + "]"
-}
-
-func (c *ChainedCoordinate) String() string {
-	return fmt.Sprintf("[%v, distanceToNext: %f, next: %v]", c.Coordinate.String(), c.DistanceToNext, c.Next.Coordinate.String())
-}
-
 type VehicleLocation struct {
 	Location  [2]float64 `json:"loc"`
 	VehicleId string     `json:"id"`
@@ -109,9 +92,9 @@ type Assignment struct {
 
 func (a *Assignment) activate() activeAssignment {
 	if a.Line != nil {
-		return activeAssignment{start: a.Start, waypoints: a.Line.Waypoints.Chain()}
+		return activeAssignment{start: a.Start, waypoints: a.Line.Waypoints.chain()}
 	} else if a.StartFrom != nil {
-		return activeAssignment{start: a.Start, waypoints: Coordinates([]Coordinate{*a.GoTo}).Chain()}
+		return activeAssignment{start: a.Start, waypoints: Coordinates([]Coordinate{*a.GoTo}).chain()}
 	} else if a.precomputed != nil {
 		return activeAssignment{start: a.Start, waypoints: a.precomputed}
 	}
@@ -123,7 +106,7 @@ type activeAssignment struct {
 	waypoints *ChainedCoordinate
 }
 
-type RoutedVehicle struct {
+type Vehicle struct {
 	SpeedKmh         float64
 	Id               string
 	HeartBeat        <-chan time.Time
@@ -131,7 +114,7 @@ type RoutedVehicle struct {
 	activeAssignment activeAssignment
 }
 
-func (v *RoutedVehicle) StartJourney(consumer chan<- VehicleLocation) {
+func (v *Vehicle) StartJourney(consumer chan<- VehicleLocation) {
 	if len(v.Assignments) == 0 {
 		return
 	}
@@ -178,7 +161,7 @@ func createEmptyResult(first *ChainedCoordinate) driveResult {
 	return driveResult{location: &first.Coordinate, lastWp: first, distanceBetween: 0, destinationReached: false}
 }
 
-func (v *RoutedVehicle) drive(lastWp *ChainedCoordinate, distanceBetween float64, distanceToDrive float64) driveResult {
+func (v *Vehicle) drive(lastWp *ChainedCoordinate, distanceBetween float64, distanceToDrive float64) driveResult {
 	currentDistance := distanceToDrive
 	wp := lastWp
 	distanceFromLast := distanceBetween

@@ -1,7 +1,7 @@
 package channels
 
 import (
-	"github.com/fafeitsch/Open-Traffic-Sandbox/routing"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/domain"
 	"strconv"
 	"sync"
 	"testing"
@@ -16,9 +16,9 @@ func TestMerge(t *testing.T) {
 		}
 		expectedLocations[location.VehicleId] = true
 	}
-	channels := make([]<-chan routing.VehicleLocation, 0)
+	channels := make([]<-chan domain.VehicleLocation, 0)
 	for i := 0; i < len(locations)/10; i++ {
-		channel := make(chan routing.VehicleLocation)
+		channel := make(chan domain.VehicleLocation)
 		go func(index int) {
 			for counter := 0; counter < 10; counter++ {
 				channel <- locations[index*10+counter]
@@ -46,10 +46,10 @@ func TestMerge(t *testing.T) {
 	}
 }
 
-func generateVehicleLocations() []routing.VehicleLocation {
-	result := make([]routing.VehicleLocation, 0)
+func generateVehicleLocations() []domain.VehicleLocation {
+	result := make([]domain.VehicleLocation, 0)
 	for i := 0; i < 60; i++ {
-		vehicleLocation := routing.VehicleLocation{VehicleId: strconv.Itoa(i), Location: [2]float64{0, 0}}
+		vehicleLocation := domain.VehicleLocation{VehicleId: strconv.Itoa(i), Location: [2]float64{0, 0}}
 		result = append(result, vehicleLocation)
 	}
 	return result
