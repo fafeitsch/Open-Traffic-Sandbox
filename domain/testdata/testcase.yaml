@@ -1,0 +1,23 @@
+start: 2020-08-27T05:01:00Z
+stopDefinition: stops.geojson
+lines:
+  - name: Busbahnhof - Lindleinsmühle - Versbach
+    id: "12-outbound"
+    stops:
+      - departure: 0
+        stopId: node/5555141689
+      - arrival: 2
+        stopId: node/6805293820
+      - arrival: 3
+        stopId: node/312062072
+      - arrival: 4
+        stopId: node/178714408
+      - arrival: 5
+        stopId: node/542261911
+vehicles:
+  - id: "V1"
+    assignments:
+      - start: 2020-08-27T05:01:00Z
+        end: 2020-08-27T05:18:00Z
+        line: "12-outbound"
+

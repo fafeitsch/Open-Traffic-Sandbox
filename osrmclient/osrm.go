@@ -26,7 +26,7 @@ func NewRouteService() *RouteService {
 	return &RouteService{client: client}
 }
 
-func (r *RouteService) QueryRoute(waypoints []domain.Coordinate) ([]domain.Coordinate, float64, error) {
+func (r *RouteService) QueryRoute(waypoints domain.Coordinates) (domain.Coordinates, float64, error) {
 	pointset := geo.NewPointSet()
 	for index, waypoints := range waypoints {
 		point := geo.NewPoint(waypoints.Lon, waypoints.Lat)

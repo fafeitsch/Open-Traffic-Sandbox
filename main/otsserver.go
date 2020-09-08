@@ -60,7 +60,7 @@ func load(args []string) ([]domain.Vehicle, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not parse stop file: %v", err)
 	}
-	vehicles, err := stops.SetupVehicles(osrmclient.NewRouteService(), scenarioFile)
+	vehicles, err := stops.SetupVehicles(osrmclient.NewRouteService().QueryRoute, scenarioFile)
 	if err != nil {
 		return nil, fmt.Errorf("Could not read input file %s: %v", os.Args[1], err)
 	}

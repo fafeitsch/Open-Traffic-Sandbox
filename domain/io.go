@@ -90,9 +90,7 @@ func LoadStops(stopReader io.Reader) (Stops, error) {
 }
 
 // RouteService is an interface capable of computing detailed waypoints between the provided waypoints.
-type RouteService interface {
-	QueryRoute([]Coordinate) ([]Coordinate, float64, error)
-}
+type RouteService func(Coordinates) (Coordinates, float64, error)
 
 // SetupVehicles reads the scenario from the scenario reader and precomputes the routes the vehicles must make.
 // For computing the routes, the routeService is used.
@@ -137,7 +135,7 @@ func computeLines(service RouteService, lines []line, stops map[string]Coordinat
 				stopCoordinates = append(stopCoordinates, coordinates)
 			}
 		}
-		waypoints, _, err := service.QueryRoute(stopCoordinates)
+		waypoints, _, err := service(stopCoordinates)
 		if err != nil {
 			return nil, fmt.Errorf("could not find waypoints for line \"%s\": %v", line.Id, err)
 		}
