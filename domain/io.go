@@ -39,10 +39,9 @@ type vehicle struct {
 }
 
 type assignment struct {
-	Start     time.Time
-	Line      *string
-	StartFrom *Coordinate
-	GoTo      *Coordinate
+	Start time.Time
+	Line  *string
+	GoTo  *Coordinate `json:"goTo" yaml:"goTo"`
 }
 
 type assignments []assignment
