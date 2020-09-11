@@ -25,6 +25,7 @@ func TestRouteService_QueryRoute(t *testing.T) {
 			_, _ = io.Copy(writer, response)
 		}
 		server := httptest.NewServer(http.HandlerFunc(successOsrm))
+		defer server.Close()
 		service := NewRouteService(server.URL + "/")
 		route, length, err := service.QueryRoute(coordinates)
 		require.Nil(t, err)
@@ -36,6 +37,7 @@ func TestRouteService_QueryRoute(t *testing.T) {
 			_, _ = writer.Write([]byte("{\n  \"code\": \"TooBig\"}"))
 		}
 		server := httptest.NewServer(http.HandlerFunc(successOsrm))
+		defer server.Close()
 		service := NewRouteService(server.URL + "/")
 		route, length, err := service.QueryRoute([]domain.Coordinate{})
 		require.EqualError(t, err, "Request failed: [GOSRM][ERROR]: The request size violates one of the service specific request size restrictions")

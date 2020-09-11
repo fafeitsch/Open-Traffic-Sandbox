@@ -2,7 +2,6 @@ package server
 
 import (
 	"github.com/gorilla/websocket"
-	"log"
 	"net/http"
 )
 
@@ -32,10 +31,7 @@ func (c *client) activateOutgoingMessages() {
 				_ = c.networkConnection.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-			err := c.networkConnection.WriteJSON(message)
-			if err != nil {
-				return
-			}
+			_ = c.networkConnection.WriteJSON(message)
 		}
 	}
 }
@@ -52,7 +48,7 @@ func (w *WebInterface) SocketHandler(writer http.ResponseWriter, request *http.R
 	setupCORS(&writer, request)
 	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
-		log.Println(err)
+		// we do nothing here because the upgrader internally has already notified the client about the error.
 		return
 	}
 	var client = &client{
