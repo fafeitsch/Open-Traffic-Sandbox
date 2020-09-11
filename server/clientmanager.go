@@ -48,25 +48,23 @@ func NewWebInterface() WebInterface {
 	return WebInterface{clients: make(map[*client]bool)}
 }
 
-func (w *WebInterface) GetWebSocketHandler() func(http.ResponseWriter, *http.Request) {
-	return func(writer http.ResponseWriter, request *http.Request) {
-		setupCORS(&writer, request)
-		conn, err := upgrader.Upgrade(writer, request, nil)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		var client = &client{
-			networkConnection: conn,
-			jsonSendChannel:   make(chan interface{}, 256),
-			onUnregister: func(unregisteredClient *client) {
-				delete(w.clients, unregisteredClient)
-			},
-		}
-		w.clients[client] = true
-
-		go client.activateOutgoingMessages()
+func (w *WebInterface) SocketHandler(writer http.ResponseWriter, request *http.Request) {
+	setupCORS(&writer, request)
+	conn, err := upgrader.Upgrade(writer, request, nil)
+	if err != nil {
+		log.Println(err)
+		return
 	}
+	var client = &client{
+		networkConnection: conn,
+		jsonSendChannel:   make(chan interface{}, 256),
+		onUnregister: func(unregisteredClient *client) {
+			delete(w.clients, unregisteredClient)
+		},
+	}
+	w.clients[client] = true
+
+	go client.activateOutgoingMessages()
 }
 
 func setupCORS(w *http.ResponseWriter, req *http.Request) {

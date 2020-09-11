@@ -53,7 +53,7 @@ func (a assignments) toRoutingAssignments(lines map[string]line) ([]Assignment, 
 		if assignment.Line != nil {
 			line, ok := lines[*assignment.Line]
 			if !ok {
-				return nil, fmt.Errorf("line with name %s is not defined", *assignment.Line)
+				return nil, fmt.Errorf("line with name \"%s\" is not defined", *assignment.Line)
 			}
 			res = Assignment{Line: line.toRoutingLine()}
 		} else if assignment.GoTo != nil {
@@ -113,7 +113,7 @@ func (s Stops) SetupVehicles(routeService RouteService, scenarioReader io.Reader
 	for _, vehicle := range scenario.Vehicles {
 		assignments, err := vehicle.Assignments.toRoutingAssignments(lines)
 		if err != nil {
-			return nil, fmt.Errorf("could not build assignments for vehicle \"%s\"", vehicle.Id)
+			return nil, fmt.Errorf("could not build assignments for vehicle \"%s\": %v", vehicle.Id, err)
 		}
 		created := Vehicle{Id: vehicle.Id, Assignments: assignments, SpeedKmh: 20}
 		result = append(result, created)

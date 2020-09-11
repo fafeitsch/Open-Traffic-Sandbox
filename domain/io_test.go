@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -31,7 +32,7 @@ func TestStops_SetupVehicles(t *testing.T) {
 	}
 	t.Run("unknown stops", func(t *testing.T) {
 		stops := make(Stops)
-		file, err := os.Open("testdata/testcase.yaml")
+		file, err := os.Open("testdata/testcase1.yaml")
 		require.NoError(t, err, "no error expected")
 		defer func() { _ = file.Close() }()
 		vehicles, err := stops.SetupVehicles(service, file)
@@ -51,7 +52,7 @@ func TestStops_SetupVehicles(t *testing.T) {
 		stops, err := LoadStops(stopsFile)
 		require.NoError(t, err)
 		require.NotNil(t, stops)
-		file, err := os.Open("testdata/testcase.yaml")
+		file, err := os.Open("testdata/testcase1.yaml")
 		require.NoError(t, err)
 		defer func() { _ = file.Close() }()
 		vehicles, err := stops.SetupVehicles(service, file)
@@ -59,11 +60,44 @@ func TestStops_SetupVehicles(t *testing.T) {
 		assert.Equal(t, 1, len(vehicles), "number of loaded vehicles")
 		vehicle := vehicles[0]
 		assert.Equal(t, 3, len(vehicle.Assignments), "number of assignments")
-		assert.NotNil(t, vehicle.Assignments[0].Line, "should be a line assignment")
+		assert.Nil(t, vehicle.Assignments[0].GoTo, "should be a line assignment with Goto == nil")
 		line := vehicle.Assignments[0].Line
 		assert.Equal(t, 5, len(line.Waypoints), "waypoints of line should be extracted correctly")
-		assert.Equal(t, "12-outbound", line.Id, "name of line should be extracted correctly")
-		assert.NotNil(t, vehicle.Assignments[1].GoTo, "should be a Goto-assignment")
+		assert.Equal(t, "12-outbound", line.Id, "id of line should be extracted correctly")
+		assert.Equal(t, "Busbahnhof - Lindleinsmühle - Versbach", line.Name, "name of line should be extracted correctly")
+		assert.Equal(t, &Coordinate{Lat: 13.03, Lon: 23.93}, vehicle.Assignments[1].GoTo)
+		assert.Nil(t, vehicle.Assignments[1].Line, "line should be nil if goto is set")
 		assert.NotNil(t, vehicle.Assignments[2].GoTo, "should be a Goto-assignment")
+	})
+	t.Run("unknown line", func(t *testing.T) {
+		stopsFile, err := os.Open("testdata/stops.geojson")
+		require.NoError(t, err)
+		defer func() { _ = stopsFile.Close() }()
+		stops, err := LoadStops(stopsFile)
+		require.NoError(t, err)
+		require.NotNil(t, stops)
+		file, err := os.Open("testdata/testcase2.yaml")
+		require.NoError(t, err)
+		defer func() { _ = file.Close() }()
+		vehicles, err := stops.SetupVehicles(service, file)
+		assert.EqualError(t, err, "could not build assignments for vehicle \"V1\": line with name \"13-not found\" is not defined")
+		assert.Nil(t, vehicles, "result should be nil in case of an error")
+	})
+	t.Run("service error", func(t *testing.T) {
+		service = func(coordinates Coordinates) (Coordinates, float64, error) {
+			return nil, 0, fmt.Errorf("planned error")
+		}
+		stopsFile, err := os.Open("testdata/stops.geojson")
+		require.NoError(t, err)
+		defer func() { _ = stopsFile.Close() }()
+		stops, err := LoadStops(stopsFile)
+		require.NoError(t, err)
+		require.NotNil(t, stops)
+		file, err := os.Open("testdata/testcase1.yaml")
+		require.NoError(t, err)
+		defer func() { _ = file.Close() }()
+		vehicles, err := stops.SetupVehicles(service, file)
+		assert.EqualError(t, err, "could not compute lines: could not find waypoints for line \"12-outbound\": planned error")
+		assert.Nil(t, vehicles, "result should be nil in case of an error")
 	})
 }

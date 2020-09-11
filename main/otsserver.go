@@ -29,7 +29,7 @@ func main() {
 	consumer := channels2.Merge(channels)
 
 	webinterface := server.NewWebInterface()
-	http.HandleFunc("/sockets", webinterface.GetWebSocketHandler())
+	http.HandleFunc("/sockets", webinterface.SocketHandler)
 
 	http.Handle("/", http.FileServer(http.Dir("../webfrontend/dist/webfrontend")))
 
@@ -60,7 +60,7 @@ func load(args []string) ([]domain.Vehicle, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not parse stop file: %v", err)
 	}
-	vehicles, err := stops.SetupVehicles(osrmclient.NewRouteService().QueryRoute, scenarioFile)
+	vehicles, err := stops.SetupVehicles(osrmclient.NewRouteService("http://localhost:5000/").QueryRoute, scenarioFile)
 	if err != nil {
 		return nil, fmt.Errorf("Could not read input file %s: %v", os.Args[1], err)
 	}

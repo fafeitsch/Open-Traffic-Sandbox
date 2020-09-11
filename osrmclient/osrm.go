@@ -9,12 +9,17 @@ import (
 	"net/url"
 )
 
+// RouteService is a OSRM client providing methods to
+// query data from an OSRM server.
 type RouteService struct {
 	client *gosrm.OsrmClient
 }
 
-func NewRouteService() *RouteService {
-	localUrl := url.URL{Host: "http://localhost:5000/"}
+// NewRouteService creates a route service and sets the most important
+// settings for connecting to the OSRM server. The connection parameter
+// denotes the address to connect to, i.e. http://localhost:5000/
+func NewRouteService(connection string) *RouteService {
+	localUrl := url.URL{Host: connection}
 	options := &gosrm.Options{
 		Url:            localUrl,
 		Service:        gosrm.ServiceRoute,
@@ -26,15 +31,19 @@ func NewRouteService() *RouteService {
 	return &RouteService{client: client}
 }
 
+// QueryRoute sends a request to the OSRM server, asking for the shortest path
+// to connect the given waypoints the the defined order (no, this is not a TSP here :)).
+// When the request is responded successfully, the shortest path is returned as well as the length
+// of the shortest path. Otherwise, a non-nil error is returned.
 func (r *RouteService) QueryRoute(waypoints domain.Coordinates) (domain.Coordinates, float64, error) {
-	pointset := geo.NewPointSet()
+	pointSet := geo.NewPointSet()
 	for index, waypoints := range waypoints {
 		point := geo.NewPoint(waypoints.Lon, waypoints.Lat)
-		pointset.InsertAt(index, point)
+		pointSet.InsertAt(index, point)
 	}
 	overview := "full"
 	routeRequest := &gosrm.RouteRequest{
-		Coordinates: *pointset,
+		Coordinates: *pointSet,
 		Overview:    &overview,
 	}
 	response, err := r.client.Route(routeRequest)

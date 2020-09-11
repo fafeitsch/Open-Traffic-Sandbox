@@ -1,0 +1,234 @@
+{
+  "code": "Ok",
+  "routes": [
+    {
+      "geometry": "qx}nHids{@BAHAHARBH@Z@V@P@F?L@LsF@a@@K?ABi@JoAH@D@@?h@Jd@Fp@JfBJt@Jv@J~@N`@FH@J@H@L@JBD@d@LHD??fA^f@Rd@P`@A`@WHAPAXZvC}Cr@y@k@_Bc@iAACM]Si@YaAs@cCIWQm@_CmGIUeBwEEMi@}AO_@?AEMo@aBE[AM?OBOBQ?Q@MAOAOAMCMEOEIEICEIKKIIEKCMAGGGKGMEMIYGo@Gs@KmAO_BIaACs@?i@AIAkAAuC?CA}B?gB?Y?}@AmAIm@Qs@GQ]}@Qa@IMQUc@s@UYSYQYUk@I]E]AS?K@QDUBIDKb@aAHQXg@|@cBNYHMd@y@^m@\\k@l@kAE_@EOEKA?yED??OBOLEFEHEJEP[pDOhBOnBC\\IhAI~@ERCLEXG\\ATMzAC`@IhAAXMpBAd@?V@z@Bz@?h@ARAVGz@CRGbACh@Gp@DPDLR?NKHMJSDWDW?YA]AWMiB[mAC{@A{@?W@e@LqB@YHiABa@L{A@UF]DYBMDSb@s@Lm@D]LsA?CVgDF}@DoAHcADo@@IBe@@EDcAD_BBkA@c@DaBBoBDgAB[Be@Hw@Da@?IAMESKYQ_@{@aBwAeCw@qAQQOMQGUAK@SFSHGDOL[Rk@h@i@`@[PYJe@Jo@Ii@MSCWIm@[KIc@[}AcBc@[e@YOIAA_@MOGg@Kq@IK?]@q@Bu@J]F_BZcAPgAXWDiBd@COO}@Q}@Ko@i@Vi@BEAOCYMQOm@q@Wa@u@eAEIIKoAqBg@w@??kA_Bo@{@]g@a@e@KMMAm@Gy@DODBl@AlB?b@A\\?Rk@?g@Dm@Pe@P[TcBrAmAhAc@Te@Pg@Le@HYBkACIC[Kg@Yc@[YW[_@a@c@g@k@k@c@g@YYKAAk@Oe@KcAIs@@Y@eAD_@He@NQJWNe@b@e@h@UXgAvAi@h@EBa@^gAbAUZIc@MUJQBOFYXmAu@yAg@_A]_@_@_@EAe@QWI_@O[MYMWYY[OOMQGKIOKSKYSu@OgAIy@Cg@?OAaC?{@Cs@C[Ck@AEI_AM{@KcAGm@Cg@@_@IGI]AK",
+      "legs": [
+        {
+          "steps": [],
+          "distance": 553.9,
+          "duration": 84.4,
+          "summary": "",
+          "weight": 84.4
+        },
+        {
+          "steps": [],
+          "distance": 373.6,
+          "duration": 69.5,
+          "summary": "",
+          "weight": 69.5
+        },
+        {
+          "steps": [],
+          "distance": 433.8,
+          "duration": 65.1,
+          "summary": "",
+          "weight": 65.1
+        },
+        {
+          "steps": [],
+          "distance": 455,
+          "duration": 48,
+          "summary": "",
+          "weight": 48
+        },
+        {
+          "steps": [],
+          "distance": 794.3,
+          "duration": 78.2,
+          "summary": "",
+          "weight": 78.2
+        },
+        {
+          "steps": [],
+          "distance": 2197.9,
+          "duration": 252.2,
+          "summary": "",
+          "weight": 252.2
+        },
+        {
+          "steps": [],
+          "distance": 440.7,
+          "duration": 44.7,
+          "summary": "",
+          "weight": 44.7
+        },
+        {
+          "steps": [],
+          "distance": 297.1,
+          "duration": 48.8,
+          "summary": "",
+          "weight": 48.8
+        },
+        {
+          "steps": [],
+          "distance": 273.2,
+          "duration": 44.7,
+          "summary": "",
+          "weight": 44.7
+        },
+        {
+          "steps": [],
+          "distance": 408.3,
+          "duration": 44.6,
+          "summary": "",
+          "weight": 44.6
+        },
+        {
+          "steps": [],
+          "distance": 217.4,
+          "duration": 23.6,
+          "summary": "",
+          "weight": 23.6
+        },
+        {
+          "steps": [],
+          "distance": 377.4,
+          "duration": 36,
+          "summary": "",
+          "weight": 36
+        },
+        {
+          "steps": [],
+          "distance": 411.2,
+          "duration": 62.9,
+          "summary": "",
+          "weight": 62.9
+        },
+        {
+          "steps": [],
+          "distance": 400.6,
+          "duration": 60.2,
+          "summary": "",
+          "weight": 60.2
+        }
+      ],
+      "distance": 7634.4,
+      "duration": 962.9,
+      "weight_name": "routability",
+      "weight": 962.9
+    }
+  ],
+  "waypoints": [
+    {
+      "distance": 33.132613,
+      "name": "Bismarckstraße",
+      "location": [
+        9.933651,
+        49.801214
+      ]
+    },
+    {
+      "distance": 0.144064,
+      "name": "Textorstraße",
+      "location": [
+        9.935032,
+        49.79745
+      ]
+    },
+    {
+      "distance": 5.944058,
+      "name": "Ludwigstraße",
+      "location": [
+        9.936621,
+        49.795473
+      ]
+    },
+    {
+      "distance": 3.832116,
+      "name": "Ludwigstraße",
+      "location": [
+        9.941579,
+        49.797698
+      ]
+    },
+    {
+      "distance": 6.896318,
+      "name": "Schweinfurter Straße",
+      "location": [
+        9.947189,
+        49.798932
+      ]
+    },
+    {
+      "distance": 4.44435,
+      "name": "Europastern",
+      "location": [
+        9.954759,
+        49.799764
+      ]
+    },
+    {
+      "distance": 7.863773,
+      "name": "Versbacher Straße",
+      "location": [
+        9.961399,
+        49.804557
+      ]
+    },
+    {
+      "distance": 6.643303,
+      "name": "Frankenstraße",
+      "location": [
+        9.961624,
+        49.808155
+      ]
+    },
+    {
+      "distance": 7.665977,
+      "name": "Schwabenstraße",
+      "location": [
+        9.963628,
+        49.810274
+      ]
+    },
+    {
+      "distance": 4.227195,
+      "name": "Ostpreußenstraße",
+      "location": [
+        9.964079,
+        49.811932
+      ]
+    },
+    {
+      "distance": 8.945293,
+      "name": "Versbacher Straße",
+      "location": [
+        9.96224,
+        49.815131
+      ]
+    },
+    {
+      "distance": 6.241828,
+      "name": "Versbacher Straße",
+      "location": [
+        9.963626,
+        49.816854
+      ]
+    },
+    {
+      "distance": 5.316671,
+      "name": "Versbacher Straße",
+      "location": [
+        9.962328,
+        49.819964
+      ]
+    },
+    {
+      "distance": 4.410841,
+      "name": "Estenfelder Straße",
+      "location": [
+        9.964379,
+        49.822302
+      ]
+    },
+    {
+      "distance": 2.619681,
+      "name": "Brunnenstraße",
+      "location": [
+        9.969517,
+        49.823332
+      ]
+    }
+  ]
+}

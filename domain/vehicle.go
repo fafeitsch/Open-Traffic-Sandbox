@@ -98,7 +98,7 @@ func (a *Assignment) activate() activeAssignment {
 	} else if a.precomputed != nil {
 		return activeAssignment{start: a.Start, waypoints: a.precomputed}
 	}
-	panic("assignment is invalid, either line, startFrom, or precomputed must be != nil")
+	panic("assignment is invalid, either line, goTo, or precomputed must be != nil")
 }
 
 type activeAssignment struct {
