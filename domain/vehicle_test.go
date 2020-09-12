@@ -3,12 +3,21 @@ package domain
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"log"
 	"sync"
 	"testing"
 	"time"
 )
+
+func TestCoordinate_PolylineEqual(t *testing.T) {
+	t.Run("not equal", func(t *testing.T) {
+		c1 := Coordinate{Lat: 49.78699, Lon: 9.97982}
+		c2 := Coordinate{Lat: 49.78698, Lon: 9.97982}
+		assert.False(t, c1.PolylineEqual(c2))
+	})
+}
 
 func TestPointsToCoordinates(t *testing.T) {
 	coords := [][]float64{{1, 2}, {3, 4}, {5, 6}}
@@ -102,7 +111,7 @@ func TestRoutedVehicle_StartJourney2(t *testing.T) {
 	receiver := make(chan VehicleLocation, 1)
 	car := Vehicle{
 		Assignments: []Assignment{
-			{Line: &Line{Waypoints: readWaypoints("testdata/sampleRoute.json")}},
+			{Waypoints: readWaypoints("testdata/sampleRoute.json")},
 		},
 		SpeedKmh: 50,
 	}

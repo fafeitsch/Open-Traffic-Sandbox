@@ -59,15 +59,10 @@ func TestStops_SetupVehicles(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(vehicles), "number of loaded vehicles")
 		vehicle := vehicles[0]
-		assert.Equal(t, 3, len(vehicle.Assignments), "number of assignments")
-		assert.Nil(t, vehicle.Assignments[0].GoTo, "should be a line assignment with Goto == nil")
-		line := vehicle.Assignments[0].Line
-		assert.Equal(t, 5, len(line.Waypoints), "waypoints of line should be extracted correctly")
-		assert.Equal(t, "12-outbound", line.Id, "id of line should be extracted correctly")
-		assert.Equal(t, "Busbahnhof - Lindleinsmühle - Versbach", line.Name, "name of line should be extracted correctly")
-		assert.Equal(t, &Coordinate{Lat: 13.03, Lon: 23.93}, vehicle.Assignments[1].GoTo)
-		assert.Nil(t, vehicle.Assignments[1].Line, "line should be nil if goto is set")
-		assert.NotNil(t, vehicle.Assignments[2].GoTo, "should be a Goto-assignment")
+		assert.Equal(t, 6, len(vehicle.Assignments), "number of assignments")
+		lineWaypoints := vehicle.Assignments[0].Waypoints
+		assert.Equal(t, 2, len(lineWaypoints), "waypoints of line should be extracted correctly")
+		assert.Equal(t, Coordinate{Lat: 13.03, Lon: 23.93}, vehicle.Assignments[4].Waypoints[0])
 	})
 	t.Run("unknown line", func(t *testing.T) {
 		stopsFile, err := os.Open("testdata/stops.geojson")
@@ -97,7 +92,7 @@ func TestStops_SetupVehicles(t *testing.T) {
 		require.NoError(t, err)
 		defer func() { _ = file.Close() }()
 		vehicles, err := stops.SetupVehicles(service, file)
-		assert.EqualError(t, err, "could not compute lines: could not find waypoints for line \"12-outbound\": planned error")
+		assert.EqualError(t, err, "could not compute lines: could not find routes for line \"12-outbound\", 1th leg: planned error")
 		assert.Nil(t, vehicles, "result should be nil in case of an error")
 	})
 }

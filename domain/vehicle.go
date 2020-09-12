@@ -11,6 +11,15 @@ type Coordinate struct {
 	Lon float64 `json:"lon"`
 }
 
+// PolylineEqual returns true if both coordinates are equally encoded using
+// the polyline format. With other words, both coordinates must be identical
+// in their first five positions after the decimal dot.
+func (c *Coordinate) PolylineEqual(other Coordinate) bool {
+	latDiff := math.Abs(c.Lat - other.Lat)
+	lonDiff := math.Abs(c.Lon - other.Lon)
+	return latDiff < 0.00001 && lonDiff < 0.00001
+}
+
 type Coordinates []Coordinate
 
 func (c Coordinates) chain() *ChainedCoordinate {
@@ -77,28 +86,22 @@ type VehicleLocation struct {
 }
 
 type Line struct {
-	Id        string
-	Name      string
-	Waypoints Coordinates
+	Id   string
+	Name string
+	Legs []Coordinates
 }
 
 type Assignment struct {
 	Start       time.Time
-	Line        *Line
-	StartFrom   *Coordinate
-	GoTo        *Coordinate
+	Waypoints   Coordinates
 	precomputed *ChainedCoordinate
 }
 
 func (a *Assignment) activate() activeAssignment {
-	if a.Line != nil {
-		return activeAssignment{start: a.Start, waypoints: a.Line.Waypoints.chain()}
-	} else if a.StartFrom != nil {
-		return activeAssignment{start: a.Start, waypoints: Coordinates([]Coordinate{*a.GoTo}).chain()}
-	} else if a.precomputed != nil {
-		return activeAssignment{start: a.Start, waypoints: a.precomputed}
+	if a.precomputed != nil {
+		return activeAssignment{waypoints: a.precomputed}
 	}
-	panic("assignment is invalid, either line, goTo, or precomputed must be != nil")
+	return activeAssignment{start: a.Start, waypoints: a.Waypoints.chain()}
 }
 
 type activeAssignment struct {
@@ -146,6 +149,7 @@ func (v *Vehicle) StartJourney(consumer chan<- VehicleLocation) {
 			}
 			v.activeAssignment = v.Assignments[0].activate()
 			v.Assignments = v.Assignments[1:]
+			driveResult = createEmptyResult(v.activeAssignment.waypoints)
 		}
 	}
 }

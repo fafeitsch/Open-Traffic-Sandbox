@@ -17,14 +17,23 @@ type scenario struct {
 }
 
 type line struct {
-	Id        string
-	Name      string
-	Stops     []lineStop
-	waypoints Coordinates
+	Id    string
+	Name  string
+	Stops []lineStop
+	legs  []Coordinates
 }
 
 func (l *line) toRoutingLine() *Line {
-	return &Line{Id: l.Id, Name: l.Name, Waypoints: l.waypoints}
+	return &Line{Id: l.Id, Name: l.Name, Legs: l.legs}
+}
+
+func (l *line) toAssignments() []Assignment {
+	result := make([]Assignment, 0, len(l.legs))
+	for _, leg := range l.legs {
+		assignment := Assignment{Waypoints: leg}
+		result = append(result, assignment)
+	}
+	return result
 }
 
 type lineStop struct {
@@ -55,12 +64,14 @@ func (a assignments) toRoutingAssignments(lines map[string]line) ([]Assignment, 
 			if !ok {
 				return nil, fmt.Errorf("line with name \"%s\" is not defined", *assignment.Line)
 			}
-			res = Assignment{Line: line.toRoutingLine()}
+			for _, leg := range line.toAssignments() {
+				result = append(result, leg)
+			}
 		} else if assignment.GoTo != nil {
-			res = Assignment{GoTo: assignment.GoTo}
+			res.Start = assignment.Start
+			res = Assignment{Waypoints: Coordinates{*assignment.GoTo}}
+			result = append(result, res)
 		}
-		res.Start = assignment.Start
-		result = append(result, res)
 	}
 	return result, nil
 }
@@ -115,7 +126,7 @@ func (s Stops) SetupVehicles(routeService RouteService, scenarioReader io.Reader
 		if err != nil {
 			return nil, fmt.Errorf("could not build assignments for vehicle \"%s\": %v", vehicle.Id, err)
 		}
-		created := Vehicle{Id: vehicle.Id, Assignments: assignments, SpeedKmh: 20}
+		created := Vehicle{Id: vehicle.Id, Assignments: assignments, SpeedKmh: 50}
 		result = append(result, created)
 	}
 	return result, nil
@@ -123,26 +134,35 @@ func (s Stops) SetupVehicles(routeService RouteService, scenarioReader io.Reader
 
 func computeLines(service RouteService, lines []line, stops map[string]Coordinate) (map[string]line, error) {
 	result := make(map[string]line)
-	unknownStops := make([]string, 0, 0)
 	for _, line := range lines {
-		stopCoordinates := make([]Coordinate, 0, len(line.Stops))
-		for _, stop := range line.Stops {
-			coordinates, ok := stops[stop.StopId]
-			if !ok {
-				unknownStops = append(unknownStops, fmt.Sprintf("%s (%s)", stop.StopId, line.Id))
-			} else {
-				stopCoordinates = append(stopCoordinates, coordinates)
+		if err := checkLine(line, stops); err != nil {
+			return nil, err
+		}
+		legs := make([]Coordinates, 0, len(line.Stops)-1)
+		for index, currentStop := range line.Stops[0 : len(line.Stops)-1] {
+			currentCoordinate := stops[currentStop.StopId]
+			nextCoordinate := stops[line.Stops[index+1].StopId]
+			leg, _, err := service(Coordinates{currentCoordinate, nextCoordinate})
+			if err != nil {
+				return nil, fmt.Errorf("could not find routes for line \"%s\", %dth leg: %v", line.Id, index+1, err)
 			}
+			legs = append(legs, leg[0:])
 		}
-		waypoints, _, err := service(stopCoordinates)
-		if err != nil {
-			return nil, fmt.Errorf("could not find waypoints for line \"%s\": %v", line.Id, err)
-		}
-		line.waypoints = waypoints
+		line.legs = legs
 		result[line.Id] = line
 	}
-	if len(unknownStops) != 0 {
-		return nil, fmt.Errorf("could not identify the following stops: %v", strings.Join(unknownStops, ", "))
-	}
 	return result, nil
+}
+
+func checkLine(line line, stops map[string]Coordinate) error {
+	unknownStops := make([]string, 0, 0)
+	for _, stop := range line.Stops {
+		if _, ok := stops[stop.StopId]; !ok {
+			unknownStops = append(unknownStops, fmt.Sprintf("%s (%s)", stop.StopId, line.Id))
+		}
+	}
+	if len(unknownStops) != 0 {
+		return fmt.Errorf("could not identify the following stops: %v", strings.Join(unknownStops, ", "))
+	}
+	return nil
 }

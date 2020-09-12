@@ -18,13 +18,13 @@ func main() {
 		log.Fatalf("cannot read scenario data: %v", err)
 	}
 	channels := make([]<-chan domain.VehicleLocation, 0, len(vehicles))
-	for _, routedVehicle := range vehicles[0:] {
+	for _, routedVehicle := range vehicles {
 		ticker := time.NewTicker(100 * time.Millisecond)
-		routedVehicle := routedVehicle
-		routedVehicle.HeartBeat = ticker.C
+		vehicle := routedVehicle
+		vehicle.HeartBeat = ticker.C
 		channel := make(chan domain.VehicleLocation)
 		channels = append(channels, channel)
-		go routedVehicle.StartJourney(channel)
+		go vehicle.StartJourney(channel)
 	}
 	consumer := channels2.Merge(channels)
 
