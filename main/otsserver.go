@@ -31,7 +31,7 @@ func main() {
 	clientContainer := server.NewClientContainer()
 	http.Handle("/sockets", clientContainer)
 
-	http.Handle("/", http.FileServer(http.Dir("../webfrontend/dist/webfrontend")))
+	http.Handle("/", http.FileServer(http.Dir("webfrontend/dist/webfrontend")))
 
 	go func() {
 		for location := range consumer {

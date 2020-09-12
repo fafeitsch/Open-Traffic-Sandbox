@@ -34,10 +34,22 @@ lines:
         stopId: node/364416437
       - arrival: 17
         stopId: node/364107585
+  - name: Campus Nord – Busbahnhof
+    id: "29-inbound-afternoon"
+    stops:
+      - departure: 0
+        stopId: node/4268777577
+      - arrival: 3
+        stopId: node/6263562420
+      - arrival: 6
+        stopId: node/6396974998
 vehicles:
   - id: "V1"
     assignments:
       - start: 2020-08-27T05:01:00Z
-        end: 2020-08-27T05:18:00Z
         line: "12-outbound"
+  - id: "V2"
+    assignments:
+      - start: 2020-08-27T05:01:00Z
+        line: "29-inbound-afternoon"
 
