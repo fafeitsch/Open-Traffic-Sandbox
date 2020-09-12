@@ -2,8 +2,8 @@ package domain
 
 import (
 	"fmt"
+	"github.com/goccy/go-yaml"
 	geojson "github.com/paulmach/go.geojson"
-	"gopkg.in/yaml.v3"
 	"io"
 	"io/ioutil"
 	"strings"

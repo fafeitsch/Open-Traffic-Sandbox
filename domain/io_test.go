@@ -41,9 +41,9 @@ func TestStops_SetupVehicles(t *testing.T) {
 	})
 	t.Run("unparsable reader", func(t *testing.T) {
 		stops := make(Stops)
-		vehicles, err := stops.SetupVehicles(service, strings.NewReader("{not a valid json/yaml"))
+		vehicles, err := stops.SetupVehicles(service, strings.NewReader("not {a valid json/yaml"))
 		assert.Nil(t, vehicles, "result should be nil in case of an error")
-		assert.EqualError(t, err, "could not load scenario file: yaml: line 1: did not find expected ',' or '}'")
+		assert.EqualError(t, err, "could not load scenario file: String node doesn't MapNode:\n    github.com/goccy/go-yaml.(*Decoder).getMapNode\n        /home/fafeitsch/go/pkg/mod/github.com/goccy/go-yaml@v1.8.2/decode.go:295")
 	})
 	t.Run("success", func(t *testing.T) {
 		stopsFile, err := os.Open("testdata/stops.geojson")

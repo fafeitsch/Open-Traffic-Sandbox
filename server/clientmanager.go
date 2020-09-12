@@ -36,15 +36,20 @@ func (c *client) activateOutgoingMessages() {
 	}
 }
 
-type WebInterface struct {
+// ClientContainer manages all websocket clients and is responsible for sending updates to the client.
+// New client containers should be created with the NewClientContainer method.
+type ClientContainer struct {
 	clients map[*client]bool
 }
 
-func NewWebInterface() WebInterface {
-	return WebInterface{clients: make(map[*client]bool)}
+// NewClientContainer creates a new ClientContainer.
+func NewClientContainer() *ClientContainer {
+	return &ClientContainer{clients: make(map[*client]bool)}
 }
 
-func (w *WebInterface) SocketHandler(writer http.ResponseWriter, request *http.Request) {
+// ServeHTTP registers new websocket clients to the container. All registered clients will receive updates
+// when the BroadcastJson method is called on the client container.
+func (w *ClientContainer) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	setupCORS(&writer, request)
 	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
@@ -61,6 +66,7 @@ func (w *WebInterface) SocketHandler(writer http.ResponseWriter, request *http.R
 	w.clients[client] = true
 
 	go client.activateOutgoingMessages()
+
 }
 
 func setupCORS(w *http.ResponseWriter, req *http.Request) {
@@ -69,8 +75,17 @@ func setupCORS(w *http.ResponseWriter, req *http.Request) {
 	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
 
-func (w *WebInterface) BroadcastJson(v interface{}) {
+// BroadcastJson encodes the passed interface as JSON and sends it to all currently registered clients.
+func (w *ClientContainer) BroadcastJson(v interface{}) {
 	for client, _ := range w.clients {
 		client.jsonSendChannel <- v
 	}
+}
+
+// Close releases all client connections of the current clients.
+func (w *ClientContainer) Close() error {
+	for client, _ := range w.clients {
+		close(client.jsonSendChannel)
+	}
+	return nil
 }

@@ -28,16 +28,17 @@ func main() {
 	}
 	consumer := channels2.Merge(channels)
 
-	webinterface := server.NewWebInterface()
-	http.HandleFunc("/sockets", webinterface.SocketHandler)
+	clientContainer := server.NewClientContainer()
+	http.Handle("/sockets", clientContainer)
 
 	http.Handle("/", http.FileServer(http.Dir("../webfrontend/dist/webfrontend")))
 
 	go func() {
 		for location := range consumer {
-			webinterface.BroadcastJson(location)
+			clientContainer.BroadcastJson(location)
 		}
 	}()
+	defer func() { _ = clientContainer.Close() }()
 
 	http.ListenAndServe(":8000", nil)
 }
