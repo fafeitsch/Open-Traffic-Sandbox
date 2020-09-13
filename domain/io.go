@@ -6,6 +6,8 @@ import (
 	geojson "github.com/paulmach/go.geojson"
 	"io"
 	"io/ioutil"
+	"math"
+	"math/rand"
 	"strings"
 	"time"
 )
@@ -24,9 +26,28 @@ type line struct {
 }
 
 func (l *line) toAssignments() []Assignment {
+	randomWaiting := func(now time.Time, vehicle *Vehicle, next *Assignment) {
+		if next == nil {
+			return
+		}
+		random := rand.New(rand.NewSource(time.Now().Unix()))
+		seconds := random.NormFloat64()*10 + 20
+		seconds = math.Max(0, seconds)
+		seconds = math.Min(600, seconds)
+		then := now.Add(time.Duration(seconds) * time.Second)
+		if then.After(next.Start) {
+			fmt.Printf("waiting %d seconds", int(seconds))
+			if now.Before(next.Start) {
+				difference := then.Sub(next.Start)
+				next.Start = now.Add(difference)
+			} else {
+				next.Start = then
+			}
+		}
+	}
 	result := make([]Assignment, 0, len(l.legs))
 	for _, leg := range l.legs {
-		assignment := Assignment{Waypoints: leg}
+		assignment := Assignment{Waypoints: leg, destinationHandler: randomWaiting}
 		result = append(result, assignment)
 	}
 	return result

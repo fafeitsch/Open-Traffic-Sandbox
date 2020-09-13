@@ -86,21 +86,25 @@ type VehicleLocation struct {
 }
 
 type Assignment struct {
-	Start       time.Time
-	Waypoints   Coordinates
-	precomputed *ChainedCoordinate
+	Start              time.Time
+	Waypoints          Coordinates
+	precomputed        *ChainedCoordinate
+	destinationHandler func(time.Time, *Vehicle, *Assignment)
 }
 
-func (a *Assignment) activate() activeAssignment {
-	if a.precomputed != nil {
-		return activeAssignment{waypoints: a.precomputed}
+func (a *Assignment) activate() driveResult {
+	if a.precomputed == nil {
+		a.precomputed = a.Waypoints.chain()
 	}
-	return activeAssignment{start: a.Start, waypoints: a.Waypoints.chain()}
+	first := a.precomputed
+	return driveResult{location: &first.Coordinate, lastWp: first, distanceBetween: 0, destinationReached: false}
 }
 
-type activeAssignment struct {
-	start     time.Time
-	waypoints *ChainedCoordinate
+func (a *Assignment) destinationReached(now time.Time, v *Vehicle, next *Assignment) {
+	if a.destinationHandler == nil {
+		return
+	}
+	a.destinationHandler(now, v, next)
 }
 
 type Vehicle struct {
@@ -108,7 +112,7 @@ type Vehicle struct {
 	Id               string
 	HeartBeat        <-chan time.Time
 	Assignments      []Assignment
-	activeAssignment activeAssignment
+	activeAssignment Assignment
 }
 
 func (v *Vehicle) StartJourney(consumer chan<- VehicleLocation) {
@@ -116,18 +120,19 @@ func (v *Vehicle) StartJourney(consumer chan<- VehicleLocation) {
 		return
 	}
 	speedMS := v.SpeedKmh / 3.6
-	v.activeAssignment = v.Assignments[0].activate()
+	v.activeAssignment = v.Assignments[0]
+	driveResult := v.activeAssignment.activate()
 	v.Assignments = v.Assignments[1:]
-	driveResult := createEmptyResult(v.activeAssignment.waypoints)
 	last := <-v.HeartBeat
-	consumer <- VehicleLocation{Location: [2]float64{v.activeAssignment.waypoints.Lat, v.activeAssignment.waypoints.Lon}, VehicleId: v.Id}
+	consumer <- VehicleLocation{Location: [2]float64{v.activeAssignment.precomputed.Lat, v.activeAssignment.precomputed.Lon}, VehicleId: v.Id}
 	for {
 		now, ok := <-v.HeartBeat
 		if !ok {
 			close(consumer)
 			return
 		}
-		if v.activeAssignment.start.After(now) {
+		if v.activeAssignment.Start.After(now) {
+			last = now
 			continue
 		}
 		deltaTime := now.Sub(last).Seconds()
@@ -138,12 +143,14 @@ func (v *Vehicle) StartJourney(consumer chan<- VehicleLocation) {
 		consumer <- location
 		if driveResult.destinationReached {
 			if len(v.Assignments) == 0 {
+				v.activeAssignment.destinationReached(now, v, nil)
 				close(consumer)
 				return
 			}
-			v.activeAssignment = v.Assignments[0].activate()
+			v.activeAssignment.destinationReached(now, v, &v.Assignments[0])
+			v.activeAssignment = v.Assignments[0]
+			driveResult = v.activeAssignment.activate()
 			v.Assignments = v.Assignments[1:]
-			driveResult = createEmptyResult(v.activeAssignment.waypoints)
 		}
 	}
 }
@@ -153,10 +160,6 @@ type driveResult struct {
 	lastWp             *ChainedCoordinate
 	distanceBetween    float64
 	destinationReached bool
-}
-
-func createEmptyResult(first *ChainedCoordinate) driveResult {
-	return driveResult{location: &first.Coordinate, lastWp: first, distanceBetween: 0, destinationReached: false}
 }
 
 func (v *Vehicle) drive(lastWp *ChainedCoordinate, distanceBetween float64, distanceToDrive float64) driveResult {

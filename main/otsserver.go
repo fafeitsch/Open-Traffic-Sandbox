@@ -20,6 +20,7 @@ func main() {
 	channels := make([]<-chan domain.VehicleLocation, 0, len(vehicles))
 	for _, routedVehicle := range vehicles {
 		ticker := time.NewTicker(100 * time.Millisecond)
+
 		vehicle := routedVehicle
 		vehicle.HeartBeat = ticker.C
 		channel := make(chan domain.VehicleLocation)
