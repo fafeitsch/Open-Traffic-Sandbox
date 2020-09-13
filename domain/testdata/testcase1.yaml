@@ -17,6 +17,10 @@ lines:
 vehicles:
   - id: "V1"
     assignments:
+      - start: 2020-08-27T05:00:00Z
+        goTo:
+          lat: 10
+          lon: 20
       - start: 2020-08-27T05:01:00Z
         line: "12-outbound"
       - start: 2020-08-27T06:00:00Z

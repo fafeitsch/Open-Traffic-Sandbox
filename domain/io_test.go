@@ -59,10 +59,12 @@ func TestStops_SetupVehicles(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(vehicles), "number of loaded vehicles")
 		vehicle := vehicles[0]
-		assert.Equal(t, 6, len(vehicle.Assignments), "number of assignments")
-		lineWaypoints := vehicle.Assignments[0].Waypoints
+		assert.Equal(t, 7, len(vehicle.Assignments), "number of assignments")
+		assert.Equal(t, Coordinate{Lat: 10, Lon: 20}, vehicle.Assignments[0].Waypoints[0], "first GoTo command")
+		lineWaypoints := vehicle.Assignments[1].Waypoints
 		assert.Equal(t, 2, len(lineWaypoints), "waypoints of line should be extracted correctly")
-		assert.Equal(t, Coordinate{Lat: 13.03, Lon: 23.93}, vehicle.Assignments[4].Waypoints[0])
+		assert.Equal(t, Coordinate{Lat: 49.7974461, Lon: 9.9350303}, vehicle.Assignments[5].Waypoints[0])
+		assert.Equal(t, Coordinate{Lat: 13.03, Lon: 23.93}, vehicle.Assignments[5].Waypoints[1])
 	})
 	t.Run("unknown line", func(t *testing.T) {
 		stopsFile, err := os.Open("testdata/stops.geojson")

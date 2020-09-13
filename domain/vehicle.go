@@ -85,12 +85,6 @@ type VehicleLocation struct {
 	VehicleId string     `json:"id"`
 }
 
-type Line struct {
-	Id   string
-	Name string
-	Legs []Coordinates
-}
-
 type Assignment struct {
 	Start       time.Time
 	Waypoints   Coordinates

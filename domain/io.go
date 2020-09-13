@@ -23,10 +23,6 @@ type line struct {
 	legs  []Coordinates
 }
 
-func (l *line) toRoutingLine() *Line {
-	return &Line{Id: l.Id, Name: l.Name, Legs: l.legs}
-}
-
 func (l *line) toAssignments() []Assignment {
 	result := make([]Assignment, 0, len(l.legs))
 	for _, leg := range l.legs {
@@ -55,10 +51,11 @@ type assignment struct {
 
 type assignments []assignment
 
-func (a assignments) toRoutingAssignments(lines map[string]line) ([]Assignment, error) {
+func (a assignments) toRoutingAssignments(service RouteService, lines map[string]line) ([]Assignment, error) {
 	result := make([]Assignment, 0, len(a))
-	for _, assignment := range a {
+	for index, assignment := range a {
 		var res Assignment
+		res.Start = assignment.Start
 		if assignment.Line != nil {
 			line, ok := lines[*assignment.Line]
 			if !ok {
@@ -68,8 +65,20 @@ func (a assignments) toRoutingAssignments(lines map[string]line) ([]Assignment, 
 				result = append(result, leg)
 			}
 		} else if assignment.GoTo != nil {
-			res.Start = assignment.Start
-			res = Assignment{Waypoints: Coordinates{*assignment.GoTo}}
+			// If the GoTo assignment is not the first one, we have to find the
+			// route from the last waypoint to the GoTo-coordinates …
+			if index > 0 && len(result[index-1].Waypoints) > 0 {
+				lastWaypoints := result[index-1].Waypoints
+				lastWaypoint := lastWaypoints[len(lastWaypoints)-1]
+				waypoints, _, err := service(Coordinates{lastWaypoint, *assignment.GoTo})
+				if err != nil {
+					return nil, fmt.Errorf("could not query route for GoTo-Assignment (index %d): %v", index, err)
+				}
+				res.Waypoints = waypoints
+			} else {
+				// … Otherwise, there is no previous waypoint and we simply beam the vehicle to the GoTo point.
+				res.Waypoints = Coordinates{*assignment.GoTo}
+			}
 			result = append(result, res)
 		}
 	}
@@ -115,14 +124,14 @@ func (s Stops) SetupVehicles(routeService RouteService, scenarioReader io.Reader
 		return nil, fmt.Errorf("could not load scenario file: %v", err)
 	}
 
-	lines, err := computeLines(routeService, scenario.Lines, s)
+	lines, err := s.resolveLines(routeService, scenario.Lines)
 	if err != nil {
 		return nil, fmt.Errorf("could not compute lines: %v", err)
 	}
 
 	result := make([]Vehicle, 0, len(scenario.Vehicles))
 	for _, vehicle := range scenario.Vehicles {
-		assignments, err := vehicle.Assignments.toRoutingAssignments(lines)
+		assignments, err := vehicle.Assignments.toRoutingAssignments(routeService, lines)
 		if err != nil {
 			return nil, fmt.Errorf("could not build assignments for vehicle \"%s\": %v", vehicle.Id, err)
 		}
@@ -132,16 +141,16 @@ func (s Stops) SetupVehicles(routeService RouteService, scenarioReader io.Reader
 	return result, nil
 }
 
-func computeLines(service RouteService, lines []line, stops map[string]Coordinate) (map[string]line, error) {
+func (s Stops) resolveLines(service RouteService, lines []line) (map[string]line, error) {
 	result := make(map[string]line)
 	for _, line := range lines {
-		if err := checkLine(line, stops); err != nil {
+		if err := s.checkLine(line); err != nil {
 			return nil, err
 		}
 		legs := make([]Coordinates, 0, len(line.Stops)-1)
 		for index, currentStop := range line.Stops[0 : len(line.Stops)-1] {
-			currentCoordinate := stops[currentStop.StopId]
-			nextCoordinate := stops[line.Stops[index+1].StopId]
+			currentCoordinate := s[currentStop.StopId]
+			nextCoordinate := s[line.Stops[index+1].StopId]
 			leg, _, err := service(Coordinates{currentCoordinate, nextCoordinate})
 			if err != nil {
 				return nil, fmt.Errorf("could not find routes for line \"%s\", %dth leg: %v", line.Id, index+1, err)
@@ -154,10 +163,10 @@ func computeLines(service RouteService, lines []line, stops map[string]Coordinat
 	return result, nil
 }
 
-func checkLine(line line, stops map[string]Coordinate) error {
+func (s Stops) checkLine(line line) error {
 	unknownStops := make([]string, 0, 0)
 	for _, stop := range line.Stops {
-		if _, ok := stops[stop.StopId]; !ok {
+		if _, ok := s[stop.StopId]; !ok {
 			unknownStops = append(unknownStops, fmt.Sprintf("%s (%s)", stop.StopId, line.Id))
 		}
 	}
