@@ -32,16 +32,24 @@ func TestStops_SetupVehicles(t *testing.T) {
 	}
 	t.Run("unknown stops", func(t *testing.T) {
 		stops := make(Stops)
+		loader := VehicleLoader{
+			RouteService:      service,
+			ExternalLocations: stops,
+		}
 		file, err := os.Open("testdata/testcase1.yaml")
 		require.NoError(t, err, "no error expected")
 		defer func() { _ = file.Close() }()
-		vehicles, err := stops.SetupVehicles(service, file)
-		assert.EqualError(t, err, "could not compute lines: could not identify the following stops: node/5555141689 (12-outbound), node/6805293820 (12-outbound), node/312062072 (12-outbound), node/178714408 (12-outbound), node/542261911 (12-outbound)", "error message wrong")
+		vehicles, err := loader.SetupVehicles(file)
+		assert.EqualError(t, err, "could not resolve some locations: unresolvable location \"node/5555141689\", unresolvable location \"node/6805293820\", unresolvable location \"node/312062072\", unresolvable location \"node/178714408\", unresolvable location \"node/542261911\"", "error message wrong")
 		assert.Nil(t, vehicles, "in case of an error the vehicles should be nil")
 	})
 	t.Run("unparsable reader", func(t *testing.T) {
 		stops := make(Stops)
-		vehicles, err := stops.SetupVehicles(service, strings.NewReader("not {a valid json/yaml"))
+		loader := VehicleLoader{
+			RouteService:      service,
+			ExternalLocations: stops,
+		}
+		vehicles, err := loader.SetupVehicles(strings.NewReader("not {a valid json/yaml"))
 		assert.Nil(t, vehicles, "result should be nil in case of an error")
 		assert.EqualError(t, err, "could not load scenario file: String node doesn't MapNode:\n    github.com/goccy/go-yaml.(*Decoder).getMapNode\n        /home/fafeitsch/go/pkg/mod/github.com/goccy/go-yaml@v1.8.2/decode.go:295")
 	})
@@ -55,7 +63,11 @@ func TestStops_SetupVehicles(t *testing.T) {
 		file, err := os.Open("testdata/testcase1.yaml")
 		require.NoError(t, err)
 		defer func() { _ = file.Close() }()
-		vehicles, err := stops.SetupVehicles(service, file)
+		loader := VehicleLoader{
+			RouteService:      service,
+			ExternalLocations: stops,
+		}
+		vehicles, err := loader.SetupVehicles(file)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(vehicles), "number of loaded vehicles")
 		vehicle := vehicles[0]
@@ -76,7 +88,11 @@ func TestStops_SetupVehicles(t *testing.T) {
 		file, err := os.Open("testdata/testcase2.yaml")
 		require.NoError(t, err)
 		defer func() { _ = file.Close() }()
-		vehicles, err := stops.SetupVehicles(service, file)
+		loader := VehicleLoader{
+			RouteService:      service,
+			ExternalLocations: stops,
+		}
+		vehicles, err := loader.SetupVehicles(file)
 		assert.EqualError(t, err, "could not build assignments for vehicle \"V1\": line with name \"13-not found\" is not defined")
 		assert.Nil(t, vehicles, "result should be nil in case of an error")
 	})
@@ -93,7 +109,11 @@ func TestStops_SetupVehicles(t *testing.T) {
 		file, err := os.Open("testdata/testcase1.yaml")
 		require.NoError(t, err)
 		defer func() { _ = file.Close() }()
-		vehicles, err := stops.SetupVehicles(service, file)
+		loader := VehicleLoader{
+			RouteService:      service,
+			ExternalLocations: stops,
+		}
+		vehicles, err := loader.SetupVehicles(file)
 		assert.EqualError(t, err, "could not compute lines: could not find routes for line \"12-outbound\", 1th leg: planned error")
 		assert.Nil(t, vehicles, "result should be nil in case of an error")
 	})

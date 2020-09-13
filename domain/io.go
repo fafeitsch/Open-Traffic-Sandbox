@@ -35,7 +35,13 @@ func (l *line) toAssignments() []Assignment {
 type lineStop struct {
 	Arrival   int
 	Departure int
-	StopId    string `yaml:"stopId"`
+	Location  location
+}
+
+type location struct {
+	Lat       float64
+	Lon       float64
+	Reference string
 }
 
 type vehicle struct {
@@ -46,7 +52,7 @@ type vehicle struct {
 type assignment struct {
 	Start time.Time
 	Line  *string
-	GoTo  *Coordinate `json:"goTo" yaml:"goTo"`
+	GoTo  *location `yaml:"goTo"`
 }
 
 type assignments []assignment
@@ -70,14 +76,14 @@ func (a assignments) toRoutingAssignments(service RouteService, lines map[string
 			if index > 0 && len(result[index-1].Waypoints) > 0 {
 				lastWaypoints := result[index-1].Waypoints
 				lastWaypoint := lastWaypoints[len(lastWaypoints)-1]
-				waypoints, _, err := service(Coordinates{lastWaypoint, *assignment.GoTo})
+				waypoints, _, err := service(Coordinates{lastWaypoint, {assignment.GoTo.Lat, assignment.GoTo.Lon}})
 				if err != nil {
 					return nil, fmt.Errorf("could not query route for GoTo-Assignment (index %d): %v", index, err)
 				}
 				res.Waypoints = waypoints
 			} else {
 				// … Otherwise, there is no previous waypoint and we simply beam the vehicle to the GoTo point.
-				res.Waypoints = Coordinates{*assignment.GoTo}
+				res.Waypoints = Coordinates{{Lat: assignment.GoTo.Lat, Lon: assignment.GoTo.Lon}}
 			}
 			result = append(result, res)
 		}
@@ -108,12 +114,27 @@ func LoadStops(stopReader io.Reader) (Stops, error) {
 	return stops, nil
 }
 
+func (s Stops) resolve(location location) (*Coordinate, error) {
+	if location.Reference == "" {
+		return &Coordinate{Lat: location.Lat, Lon: location.Lon}, nil
+	}
+	if stop, ok := s[location.Reference]; ok {
+		return &stop, nil
+	}
+	return nil, fmt.Errorf("unresolvable location \"%s\"", location.Reference)
+}
+
 // RouteService is an interface capable of computing detailed waypoints between the provided waypoints.
 type RouteService func(Coordinates) (Coordinates, float64, error)
 
+type VehicleLoader struct {
+	RouteService      RouteService
+	ExternalLocations Stops
+}
+
 // SetupVehicles reads the scenario from the scenario reader and precomputes the routes the vehicles must make.
 // For computing the routes, the routeService is used.
-func (s Stops) SetupVehicles(routeService RouteService, scenarioReader io.Reader) ([]Vehicle, error) {
+func (v *VehicleLoader) SetupVehicles(scenarioReader io.Reader) ([]Vehicle, error) {
 	scenario := scenario{}
 	data, err := ioutil.ReadAll(scenarioReader)
 	if err != nil {
@@ -124,14 +145,18 @@ func (s Stops) SetupVehicles(routeService RouteService, scenarioReader io.Reader
 		return nil, fmt.Errorf("could not load scenario file: %v", err)
 	}
 
-	lines, err := s.resolveLines(routeService, scenario.Lines)
+	err = v.resolveLocations(&scenario)
+	if err != nil {
+		return nil, err
+	}
+	lines, err := v.resolveLines(scenario.Lines)
 	if err != nil {
 		return nil, fmt.Errorf("could not compute lines: %v", err)
 	}
 
 	result := make([]Vehicle, 0, len(scenario.Vehicles))
 	for _, vehicle := range scenario.Vehicles {
-		assignments, err := vehicle.Assignments.toRoutingAssignments(routeService, lines)
+		assignments, err := vehicle.Assignments.toRoutingAssignments(v.RouteService, lines)
 		if err != nil {
 			return nil, fmt.Errorf("could not build assignments for vehicle \"%s\": %v", vehicle.Id, err)
 		}
@@ -141,17 +166,46 @@ func (s Stops) SetupVehicles(routeService RouteService, scenarioReader io.Reader
 	return result, nil
 }
 
-func (s Stops) resolveLines(service RouteService, lines []line) (map[string]line, error) {
+func (v *VehicleLoader) resolveLocations(scenario *scenario) error {
+	errors := make([]string, 0, 0)
+	for _, line := range scenario.Lines {
+		for _, stop := range line.Stops {
+			resolved, err := v.ExternalLocations.resolve(stop.Location)
+			if err != nil {
+				errors = append(errors, err.Error())
+			} else {
+				stop.Location.Lat = resolved.Lat
+				stop.Location.Lon = resolved.Lon
+			}
+		}
+	}
+	for _, vehicle := range scenario.Vehicles {
+		for _, assignment := range vehicle.Assignments {
+			if assignment.GoTo != nil {
+				resolved, err := v.ExternalLocations.resolve(*assignment.GoTo)
+				if err != nil {
+					errors = append(errors, err.Error())
+				} else {
+					assignment.GoTo.Lat = resolved.Lat
+					assignment.GoTo.Lon = resolved.Lon
+				}
+			}
+		}
+	}
+	if len(errors) > 0 {
+		return fmt.Errorf("could not resolve some locations: %s", strings.Join(errors, ", "))
+	}
+	return nil
+}
+
+func (v *VehicleLoader) resolveLines(lines []line) (map[string]line, error) {
 	result := make(map[string]line)
 	for _, line := range lines {
-		if err := s.checkLine(line); err != nil {
-			return nil, err
-		}
 		legs := make([]Coordinates, 0, len(line.Stops)-1)
 		for index, currentStop := range line.Stops[0 : len(line.Stops)-1] {
-			currentCoordinate := s[currentStop.StopId]
-			nextCoordinate := s[line.Stops[index+1].StopId]
-			leg, _, err := service(Coordinates{currentCoordinate, nextCoordinate})
+			currentCoordinate, _ := v.ExternalLocations.resolve(currentStop.Location)
+			nextCoordinate, _ := v.ExternalLocations.resolve(line.Stops[index+1].Location)
+			leg, _, err := v.RouteService(Coordinates{*currentCoordinate, *nextCoordinate})
 			if err != nil {
 				return nil, fmt.Errorf("could not find routes for line \"%s\", %dth leg: %v", line.Id, index+1, err)
 			}
@@ -161,17 +215,4 @@ func (s Stops) resolveLines(service RouteService, lines []line) (map[string]line
 		result[line.Id] = line
 	}
 	return result, nil
-}
-
-func (s Stops) checkLine(line line) error {
-	unknownStops := make([]string, 0, 0)
-	for _, stop := range line.Stops {
-		if _, ok := s[stop.StopId]; !ok {
-			unknownStops = append(unknownStops, fmt.Sprintf("%s (%s)", stop.StopId, line.Id))
-		}
-	}
-	if len(unknownStops) != 0 {
-		return fmt.Errorf("could not identify the following stops: %v", strings.Join(unknownStops, ", "))
-	}
-	return nil
 }

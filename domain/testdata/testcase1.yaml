@@ -5,15 +5,20 @@ lines:
     id: "12-outbound"
     stops:
       - departure: 0
-        stopId: node/5555141689
+        location:
+          reference: node/5555141689
       - arrival: 2
-        stopId: node/6805293820
+        location:
+          reference: node/6805293820
       - arrival: 3
-        stopId: node/312062072
+        location:
+          reference: node/312062072
       - arrival: 4
-        stopId: node/178714408
+        location:
+          reference: node/178714408
       - arrival: 5
-        stopId: node/542261911
+        location:
+          reference: node/542261911
 vehicles:
   - id: "V1"
     assignments:

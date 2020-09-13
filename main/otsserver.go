@@ -61,7 +61,12 @@ func load(args []string) ([]domain.Vehicle, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not parse stop file: %v", err)
 	}
-	vehicles, err := stops.SetupVehicles(osrmclient.NewRouteService("http://localhost:5000/").QueryRoute, scenarioFile)
+	loader := domain.VehicleLoader{
+		RouteService:      osrmclient.NewRouteService("http://localhost:5000/").QueryRoute,
+		ExternalLocations: stops,
+	}
+
+	vehicles, err := loader.SetupVehicles(scenarioFile)
 	if err != nil {
 		return nil, fmt.Errorf("Could not read input file %s: %v", os.Args[1], err)
 	}
