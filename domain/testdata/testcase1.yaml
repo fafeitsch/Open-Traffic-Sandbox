@@ -7,17 +7,16 @@ lines:
       - departure: 0
         location:
           reference: node/5555141689
-      - arrival: 2
+      - departure: 2
         location:
           reference: node/6805293820
-      - arrival: 3
+      - departure: 3
         location:
           reference: node/312062072
-      - arrival: 4
+      - departure: 4
         location:
           reference: node/178714408
-      - arrival: 5
-        location:
+      - location:
           reference: node/542261911
 vehicles:
   - id: "V1"

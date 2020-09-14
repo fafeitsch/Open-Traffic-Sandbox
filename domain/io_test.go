@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestLoadStops(t *testing.T) {
@@ -26,7 +27,7 @@ func TestLoadStops(t *testing.T) {
 	})
 }
 
-func TestStops_SetupVehicles(t *testing.T) {
+func TestVehicleLoader_SetupVehicles(t *testing.T) {
 	service := func(waypoints Coordinates) (Coordinates, float64, error) {
 		return waypoints, 0, nil
 	}
@@ -67,14 +68,17 @@ func TestStops_SetupVehicles(t *testing.T) {
 			RouteService:      service,
 			ExternalLocations: stops,
 		}
-		vehicles, err := loader.SetupVehicles(file)
+		scenario, err := loader.SetupVehicles(file)
 		require.NoError(t, err)
-		assert.Equal(t, 1, len(vehicles), "number of loaded vehicles")
-		vehicle := vehicles[0]
+		assert.Equal(t, "2020-08-27T05:01:00Z", scenario.Start.Format(time.RFC3339), "unmarshalled start date not correct")
+		assert.Equal(t, 1, len(scenario.Vehicles), "number of loaded vehicles")
+		vehicle := scenario.Vehicles[0]
 		assert.Equal(t, 7, len(vehicle.Assignments), "number of assignments")
 		assert.Equal(t, Coordinate{Lat: 10, Lon: 20}, vehicle.Assignments[0].Waypoints[0], "first GoTo command")
 		lineWaypoints := vehicle.Assignments[1].Waypoints
 		assert.Equal(t, 2, len(lineWaypoints), "waypoints of line should be extracted correctly")
+		assert.Equal(t, "5:04AM", vehicle.Assignments[3].Start.Format(time.Kitchen), "departure time at third stop")
+		assert.Equal(t, "5:05AM", vehicle.Assignments[4].Start.Format(time.Kitchen), "departure time at forth stop")
 		assert.Equal(t, Coordinate{Lat: 49.7974461, Lon: 9.9350303}, vehicle.Assignments[5].Waypoints[0])
 		assert.Equal(t, Coordinate{Lat: 13.03, Lon: 23.93}, vehicle.Assignments[5].Waypoints[1])
 	})

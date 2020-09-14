@@ -13,16 +13,14 @@ import (
 )
 
 func main() {
-	vehicles, err := load(os.Args)
+	scenario, err := load(os.Args)
 	if err != nil {
 		log.Fatalf("cannot read scenario data: %v", err)
 	}
-	channels := make([]<-chan domain.VehicleLocation, 0, len(vehicles))
-	for _, routedVehicle := range vehicles {
-		ticker := time.NewTicker(100 * time.Millisecond)
-
+	channels := make([]<-chan domain.VehicleLocation, 0, len(scenario.Vehicles))
+	for _, routedVehicle := range scenario.Vehicles {
 		vehicle := routedVehicle
-		vehicle.HeartBeat = ticker.C
+		vehicle.HeartBeat = createShiftedTimer(scenario.Start)
 		channel := make(chan domain.VehicleLocation)
 		channels = append(channels, channel)
 		go vehicle.StartJourney(channel)
@@ -44,7 +42,7 @@ func main() {
 	http.ListenAndServe(":8000", nil)
 }
 
-func load(args []string) ([]domain.Vehicle, error) {
+func load(args []string) (*domain.LoadedScenario, error) {
 	if len(args) != 3 {
 		log.Fatalf("missing scenario definition and stop definition file")
 	}
@@ -67,9 +65,21 @@ func load(args []string) ([]domain.Vehicle, error) {
 		ExternalLocations: stops,
 	}
 
-	vehicles, err := loader.SetupVehicles(scenarioFile)
+	scenario, err := loader.SetupVehicles(scenarioFile)
 	if err != nil {
 		return nil, fmt.Errorf("Could not read input file %s: %v", os.Args[1], err)
 	}
-	return vehicles, nil
+	return scenario, nil
+}
+
+func createShiftedTimer(start time.Time) chan time.Time {
+	ticker := time.NewTicker(100 * time.Millisecond)
+	difference := time.Now().Sub(start)
+	result := make(chan time.Time)
+	go func() {
+		for tick := range ticker.C {
+			result <- tick.Add(-difference)
+		}
+	}()
+	return result
 }

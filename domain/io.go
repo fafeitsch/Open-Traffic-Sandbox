@@ -25,7 +25,7 @@ type line struct {
 	legs  []Coordinates
 }
 
-func (l *line) toAssignments() []Assignment {
+func (l *line) toAssignments(baseStart time.Time) []Assignment {
 	randomWaiting := func(now time.Time, vehicle *Vehicle, next *Assignment) {
 		if next == nil {
 			return
@@ -46,15 +46,15 @@ func (l *line) toAssignments() []Assignment {
 		}
 	}
 	result := make([]Assignment, 0, len(l.legs))
-	for _, leg := range l.legs {
-		assignment := Assignment{Waypoints: leg, destinationHandler: randomWaiting}
+	for index, leg := range l.legs {
+		departure := baseStart.Add(time.Duration(l.Stops[index].Departure) * time.Minute)
+		assignment := Assignment{Waypoints: leg, destinationHandler: randomWaiting, Start: departure}
 		result = append(result, assignment)
 	}
 	return result
 }
 
 type lineStop struct {
-	Arrival   int
 	Departure int
 	Location  location
 }
@@ -88,7 +88,7 @@ func (a assignments) toRoutingAssignments(service RouteService, lines map[string
 			if !ok {
 				return nil, fmt.Errorf("line with name \"%s\" is not defined", *assignment.Line)
 			}
-			for _, leg := range line.toAssignments() {
+			for _, leg := range line.toAssignments(assignment.Start) {
 				result = append(result, leg)
 			}
 		} else if assignment.GoTo != nil {
@@ -153,9 +153,14 @@ type VehicleLoader struct {
 	ExternalLocations Stops
 }
 
+type LoadedScenario struct {
+	Vehicles []Vehicle
+	Start    time.Time
+}
+
 // SetupVehicles reads the scenario from the scenario reader and precomputes the routes the vehicles must make.
 // For computing the routes, the routeService is used.
-func (v *VehicleLoader) SetupVehicles(scenarioReader io.Reader) ([]Vehicle, error) {
+func (v *VehicleLoader) SetupVehicles(scenarioReader io.Reader) (*LoadedScenario, error) {
 	scenario := scenario{}
 	data, err := ioutil.ReadAll(scenarioReader)
 	if err != nil {
@@ -175,16 +180,17 @@ func (v *VehicleLoader) SetupVehicles(scenarioReader io.Reader) ([]Vehicle, erro
 		return nil, fmt.Errorf("could not compute lines: %v", err)
 	}
 
-	result := make([]Vehicle, 0, len(scenario.Vehicles))
+	result := LoadedScenario{Start: scenario.Start}
+	result.Vehicles = make([]Vehicle, 0, len(scenario.Vehicles))
 	for _, vehicle := range scenario.Vehicles {
 		assignments, err := vehicle.Assignments.toRoutingAssignments(v.RouteService, lines)
 		if err != nil {
 			return nil, fmt.Errorf("could not build assignments for vehicle \"%s\": %v", vehicle.Id, err)
 		}
 		created := Vehicle{Id: vehicle.Id, Assignments: assignments, SpeedKmh: 50}
-		result = append(result, created)
+		result.Vehicles = append(result.Vehicles, created)
 	}
-	return result, nil
+	return &result, nil
 }
 
 func (v *VehicleLoader) resolveLocations(scenario *scenario) error {
