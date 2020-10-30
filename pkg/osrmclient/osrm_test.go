@@ -2,7 +2,7 @@ package osrmclient
 
 import (
 	"fmt"
-	"github.com/fafeitsch/Open-Traffic-Sandbox/domain"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/domain"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"

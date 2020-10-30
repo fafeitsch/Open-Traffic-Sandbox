@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	channels2 "github.com/fafeitsch/Open-Traffic-Sandbox/channels"
-	"github.com/fafeitsch/Open-Traffic-Sandbox/domain"
-	"github.com/fafeitsch/Open-Traffic-Sandbox/osrmclient"
-	"github.com/fafeitsch/Open-Traffic-Sandbox/server"
+	channels2 "github.com/fafeitsch/Open-Traffic-Sandbox/pkg/channels"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/domain"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/osrmclient"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/server"
 	"log"
 	"net/http"
 	"os"

@@ -1,77 +1,19 @@
-start: 2020-08-27T05:00:00Z
+start: 2020-08-27T05:01:00Z
 stopDefinition: stops.geojson
 lines:
-  - name: Busbahnhof - Lindleinsmühle - Versbach
-    id: "12-outbound"
-    stops:
-      - departure: 0
-        location:
-          reference: node/5555141689
-      - departure: 2
-        location:
-          reference: node/6805293820
-      - departure: 3
-        location:
-          reference: node/312062072
-      - departure: 4
-        location:
-          reference: node/178714408
-      - departure: 5
-        location:
-          reference: node/542261911
-      - departure: 6
-        location:
-          reference: node/300334001
-      - departure: 8
-        location:
-          reference: node/7105539936
-      - departure: 9
-        location:
-          reference: node/288528969
-      - departure: 10
-        location:
-          reference: node/317504191
-      - departure: 11
-        location:
-          reference: node/288530236
-      - departure: 12
-        location:
-          reference: node/667326791
-      - departure: 13
-        location:
-          reference: node/1757443579
-      - departure: 14
-        location:
-          reference: node/360884458
-      - departure: 15
-        location:
-          reference: node/364416437
-      - location:
-          reference: node/364107585
-  - name: Campus Nord – Busbahnhof
-    id: "29-inbound-afternoon"
-    stops:
-      - departure: 0
-        location:
-          reference: node/4268777577
-      - departure: 3
-        location:
-          reference: node/6263562420
-      - location:
-          reference: node/6396974998
+  - name: Busbahnhof - Residenz - Sanderau
+    id: "A-outbound"
+    file: "lineA.csv"
 vehicles:
   - id: "V1"
     assignments:
-      - start: 2020-08-27T05:01:00Z
-        line: "12-outbound"
+      - start: "6:15"
+        line: "A-outbound"
   - id: "V2"
     assignments:
-      - start: 2020-08-27T04:00:00Z
-        goTo:2
-          reference: node/560098396
-      - start: 2020-08-27T04:00:00Z
+      - start: "6:35"
+        line: "A-outbound"
+      - start: 6:50
         goTo:
           reference: node/4268777577
-      - start: 2020-08-27T05:01:00Z
-        line: "29-inbound-afternoon"
 

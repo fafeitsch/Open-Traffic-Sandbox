@@ -1,7 +1,7 @@
 package channels
 
 import (
-	"github.com/fafeitsch/Open-Traffic-Sandbox/domain"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/domain"
 	"strconv"
 	"sync"
 	"testing"

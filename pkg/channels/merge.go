@@ -1,6 +1,6 @@
 package channels
 
-import "github.com/fafeitsch/Open-Traffic-Sandbox/domain"
+import "github.com/fafeitsch/Open-Traffic-Sandbox/pkg/domain"
 
 // Merge takes a slice of channels and returns one single channel
 // which emits data put into any of the input channels.

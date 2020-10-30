@@ -2,7 +2,7 @@ package osrmclient
 
 import (
 	"fmt"
-	"github.com/fafeitsch/Open-Traffic-Sandbox/domain"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/domain"
 	"github.com/karmadon/gosrm"
 	geo "github.com/paulmach/go.geo"
 	"github.com/twpayne/go-polyline"
