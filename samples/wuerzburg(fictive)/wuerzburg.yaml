@@ -4,7 +4,7 @@ lines:
   - name: Busbahnhof - Residenz - Sanderau
     id: "A-outbound"
     file: "lineA.csv"
-vehicles:
+buses:
   - id: "V1"
     assignments:
       - start: "6:15"
