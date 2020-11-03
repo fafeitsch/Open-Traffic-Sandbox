@@ -18,7 +18,7 @@ func NewDispatcher(mdl model.BusModel) *Dispatcher {
 func (d *Dispatcher) Start(start time.Time) {
 	for _, modelBus := range d.busModel.Buses() {
 		bus := bus{id: modelBus.Id, assignments: modelBus.Assignments, gps: d.gps}
-		bus.ready(start)
+		bus.start(start)
 	}
 }
 

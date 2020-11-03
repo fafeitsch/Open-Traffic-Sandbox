@@ -53,6 +53,14 @@ func (t Time) HourMinute() (int, int) {
 	return minutes / 24, minutes - minutes/24
 }
 
+func (t Time) Before(other Time) bool {
+	return t < other
+}
+
+func (t Time) Sub(other Time) time.Duration {
+	return time.Duration(t-other) * time.Millisecond
+}
+
 type Timer struct {
 	HeartBeat     <-chan Time
 	originalTimer time.Timer
