@@ -66,6 +66,7 @@ func (b *bus) drive(route []model.Coordinate, distanceToDrive float64) []model.C
 	lat := b.position.Lat() + lambda*deltaX
 	lon := b.position.Lon() + lambda*deltaY
 	b.position = &coordinate{lat: lat, lon: lon}
+	b.dispatcher.positionStatement(b, b.position)
 	return newRoute
 }
 

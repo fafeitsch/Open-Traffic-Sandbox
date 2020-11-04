@@ -2,44 +2,50 @@ package main
 
 import (
 	"fmt"
-	channels2 "github.com/fafeitsch/Open-Traffic-Sandbox/pkg/channels"
 	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/domain"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/model"
 	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/osrmclient"
-	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/server"
 	"log"
-	"net/http"
 	"os"
 	"time"
 )
 
 func main() {
-	scenario, err := load(os.Args)
+	fmt.Printf("Loading scenario file …\n")
+	model, err := model.Init("samples/wuerzburg(fictive)")
 	if err != nil {
-		log.Fatalf("cannot read scenario data: %v", err)
+		log.Fatalf("could not understand scenario file: %v", err)
 	}
-	channels := make([]<-chan domain.VehicleLocation, 0, len(scenario.Vehicles))
-	for _, routedVehicle := range scenario.Vehicles {
-		vehicle := routedVehicle
-		vehicle.HeartBeat = createShiftedTimer(scenario.Start)
-		channel := make(chan domain.VehicleLocation)
-		channels = append(channels, channel)
-		go vehicle.StartJourney(channel)
-	}
-	consumer := channels2.Merge(channels)
-
-	clientContainer := server.NewClientContainer()
-	http.Handle("/sockets", clientContainer)
-
-	http.Handle("/", http.FileServer(http.Dir("webfrontend/dist/webfrontend")))
-
-	go func() {
-		for location := range consumer {
-			clientContainer.BroadcastJson(location)
-		}
-	}()
-	defer func() { _ = clientContainer.Close() }()
-
-	http.ListenAndServe(":8000", nil)
+	fmt.Printf("Scenario loaded successfully, here is some information about it:\n")
+	fmt.Println()
+	fmt.Printf("%v", model)
+	// scenario, err := load(os.Args)
+	// if err != nil {
+	// 	log.Fatalf("cannot read scenario data: %v", err)
+	// }
+	// channels := make([]<-chan domain.VehicleLocation, 0, len(scenario.Vehicles))
+	// for _, routedVehicle := range scenario.Vehicles {
+	// 	vehicle := routedVehicle
+	// 	vehicle.HeartBeat = createShiftedTimer(scenario.Start)
+	// 	channel := make(chan domain.VehicleLocation)
+	// 	channels = append(channels, channel)
+	// 	go vehicle.StartJourney(channel)
+	// }
+	// consumer := channels2.Merge(channels)
+	//
+	// clientContainer := server.NewClientContainer()
+	// http.Handle("/sockets", clientContainer)
+	//
+	// http.Handle("/", http.FileServer(http.Dir("webfrontend/dist/webfrontend")))
+	//
+	// go func() {
+	// 	for location := range consumer {
+	// 		clientContainer.BroadcastJson(location)
+	// 	}
+	// }()
+	// defer func() { _ = clientContainer.Close() }()
+	//
+	// http.ListenAndServe(":8000", nil)
 }
 
 func load(args []string) (*domain.LoadedScenario, error) {

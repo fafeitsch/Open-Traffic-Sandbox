@@ -1,6 +1,11 @@
 package model
 
-import "time"
+import (
+	"fmt"
+	"regexp"
+	"strconv"
+	"time"
+)
 
 type BusId string
 
@@ -48,9 +53,22 @@ type Publisher func(position BusPosition)
 
 type Time int
 
+var TimeRegex = regexp.MustCompile("^([0-9]+):?([0-5][0-9])$")
+
+func ParseTime(time string) (Time, error) {
+	submatch := TimeRegex.FindStringSubmatch(string(time))
+	if submatch == nil {
+		return 0, fmt.Errorf("the string \"%s\" does not match the required format", time)
+	}
+	hour, _ := strconv.Atoi(submatch[1])
+	minute, _ := strconv.Atoi(submatch[2])
+	return Time((hour*60 + minute) * 60 * 1000), nil
+}
+
 func (t Time) HourMinute() (int, int) {
-	minutes := int(t) / 1000 / 60 / 60
-	return minutes / 24, minutes - minutes/24
+	minutes := int(t) / 1000 / 60
+	hours := minutes / 60
+	return hours, minutes - hours*60
 }
 
 func (t Time) Before(other Time) bool {
@@ -59,6 +77,11 @@ func (t Time) Before(other Time) bool {
 
 func (t Time) Sub(other Time) time.Duration {
 	return time.Duration(t-other) * time.Millisecond
+}
+
+func (t Time) String() string {
+	hour, minute := t.HourMinute()
+	return fmt.Sprintf("%02d:%02d", hour, minute)
 }
 
 type Timer struct {
@@ -84,4 +107,25 @@ func NewTimer(interval time.Duration, start Time) Timer {
 		}
 	}()
 	return Timer{HeartBeat: channel}
+}
+
+type StopId string
+
+type Stop struct {
+	id        StopId
+	name      string
+	latitude  float64
+	longitude float64
+}
+
+func (s Stop) Lat() float64 {
+	return s.latitude
+}
+
+func (s Stop) Lon() float64 {
+	return s.longitude
+}
+
+func (s Stop) String() string {
+	return fmt.Sprintf("%s(%s)", s.name, s.id)
 }

@@ -1,4 +1,4 @@
-start: 2020-08-27T05:01:00Z
+start: 6:00
 stopDefinition: stops.geojson
 lines:
   - name: Busbahnhof - Residenz - Sanderau
@@ -7,12 +7,12 @@ lines:
 buses:
   - id: "V1"
     assignments:
-      - start: "6:15"
-        line: "A-outbound"
+      - start: 6:15
+        line: A-outbound
   - id: "V2"
     assignments:
-      - start: "6:35"
-        line: "A-outbound"
+      - start: 6:35
+        line: A-outbound
       - start: 6:50
         goTo:
           reference: node/4268777577
