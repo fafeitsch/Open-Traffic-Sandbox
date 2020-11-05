@@ -75,6 +75,10 @@ func (t Time) Before(other Time) bool {
 	return t < other
 }
 
+func (t Time) Add(duration time.Duration) Time {
+	return Time(int(t) + int(duration/time.Millisecond))
+}
+
 func (t Time) Sub(other Time) time.Duration {
 	return time.Duration(t-other) * time.Millisecond
 }
@@ -118,14 +122,27 @@ type Stop struct {
 	longitude float64
 }
 
-func (s Stop) Lat() float64 {
+func (s *Stop) Lat() float64 {
 	return s.latitude
 }
 
-func (s Stop) Lon() float64 {
+func (s *Stop) Lon() float64 {
 	return s.longitude
 }
 
-func (s Stop) String() string {
+func (s *Stop) String() string {
 	return fmt.Sprintf("%s(%s)", s.name, s.id)
+}
+
+type LineId string
+
+type Line struct {
+	id         LineId
+	name       string
+	stops      []*Stop
+	departures map[StopId][]Time
+}
+
+func (l *Line) String() string {
+	return fmt.Sprintf("%s(%s)", l.name, l.id)
 }

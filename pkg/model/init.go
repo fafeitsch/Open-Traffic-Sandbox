@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/csv"
 	"fmt"
 	routing "github.com/fafeitsch/simple-timetable-routing"
 	"github.com/goccy/go-yaml"
@@ -8,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type BusModel interface {
@@ -39,6 +41,10 @@ func Init(directory string) (Model, error) {
 		return nil, fmt.Errorf("loading the stops from the referenced file \"%s\" failed: %v", scenario.StopDefinition, err)
 	}
 	model.stops = stops
+	model.lines, err = loadLines(scenario, directory, stops)
+	if err != nil {
+		return nil, fmt.Errorf("could not load lines: %v", err)
+	}
 	return &model, err
 }
 
@@ -63,10 +69,49 @@ func loadStops(path string) (map[StopId]Stop, error) {
 	return stops, nil
 }
 
+func loadLines(scenario scenario, directory string, stops map[StopId]Stop) ([]Line, error) {
+	loadingErrors := make([]string, 0, 0)
+	result := make([]Line, 0, len(scenario.Lines))
+next:
+	for _, line := range scenario.Lines {
+		file, err := os.Open(filepath.Join(directory, line.File))
+		if err != nil {
+			loadingErrors = append(loadingErrors, fmt.Sprintf("loading file line \"%s\" failed: %v", line.Id, err))
+		}
+		reader := csv.NewReader(file)
+		reader.ReuseRecord = true
+		reader.LazyQuotes = true
+		stopList := make([]*Stop, 0, 0)
+		departureMap := make(map[StopId][]Time)
+		for data, err := reader.Read(); err == nil; data, err = reader.Read() {
+			stopId := StopId(data[1])
+			stop, ok := stops[stopId]
+			if !ok {
+				loadingErrors = append(loadingErrors, fmt.Sprintf("could not find stop \"%s\" of line \"%s\"", stopId, line.Id))
+				file.Close()
+				continue next
+			}
+			stopList = append(stopList, &stop)
+			departures, err := createDepartures(data)
+			if err != nil {
+				loadingErrors = append(loadingErrors, fmt.Sprintf("could not parse departures of line \"%s\": %v", line.Id, err))
+				continue next
+			}
+			departureMap[stopId] = departures
+		}
+		result = append(result, Line{id: LineId(line.Id), name: line.Name, stops: stopList, departures: departureMap})
+		file.Close()
+	}
+	if len(loadingErrors) != 0 {
+		return nil, fmt.Errorf("%s", strings.Join(loadingErrors, ","))
+	}
+	return result, nil
+}
+
 type scenario struct {
 	Start          string
 	StopDefinition string `json:"stopDefinition"`
-	lines          []struct {
+	Lines          []struct {
 		Name string
 		Id   string
 		File string
@@ -92,6 +137,7 @@ type ioAssignment struct {
 type model struct {
 	start Time
 	stops map[StopId]Stop
+	lines []Line
 }
 
 func (m *model) Buses() []Bus {
@@ -101,5 +147,6 @@ func (m *model) Buses() []Bus {
 func (m *model) String() string {
 	result := fmt.Sprintf("Start Time: %v\n", m.start)
 	result = result + fmt.Sprintf("Stops: %d\n", len(m.stops))
+	result = result + fmt.Sprintf("Lines: %d", len(m.lines))
 	return result
 }
