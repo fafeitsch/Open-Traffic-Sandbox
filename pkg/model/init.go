@@ -3,7 +3,6 @@ package model
 import (
 	"encoding/csv"
 	"fmt"
-	routing "github.com/fafeitsch/simple-timetable-routing"
 	"github.com/goccy/go-yaml"
 	geojson "github.com/paulmach/go.geojson"
 	"io/ioutil"
@@ -42,6 +41,10 @@ func Init(directory string) (Model, error) {
 	}
 	model.stops = stops
 	model.lines, err = loadLines(scenario, directory, stops)
+	if err != nil {
+		return nil, fmt.Errorf("could not load lines: %v", err)
+	}
+	model.buses, err = loadBuses(scenario, model.lines)
 	if err != nil {
 		return nil, fmt.Errorf("could not load lines: %v", err)
 	}
@@ -108,6 +111,67 @@ next:
 	return result, nil
 }
 
+func loadBuses(scenario scenario, lines []Line) ([]Bus, error) {
+	lineMap := make(map[LineId]*Line)
+	for _, line := range lines {
+		lineMap[line.id] = &line
+	}
+	result := make([]Bus, 0, len(scenario.Buses))
+	for _, scenBus := range scenario.Buses {
+		bus := Bus{Id: BusId(scenBus.Id)}
+		assignments := make([]Assignment, 0, len(scenBus.Assignments))
+		for _, asmgt := range scenBus.Assignments {
+			start, err := ParseTime(asmgt.Start)
+			assignment := Assignment{Departure: start}
+			if err != nil {
+				return nil, fmt.Errorf("could not parse time \"%s\" of bus \"%s\": %v", asmgt.Start, scenBus.Id, err)
+			}
+			if asmgt.Line != "" {
+				line, ok := lineMap[LineId(asmgt.Line)]
+				if !ok {
+					return nil, fmt.Errorf("line \"%s\" of bus \"%s\" not found", asmgt.Line, scenBus.Id)
+				}
+				assignment.Line = line
+				assignment.Name = line.name
+				waypoints := make([]WayPoint, 0, len(line.stops))
+				departures := line.DepartureTimes(assignment.Departure)
+				if departures == nil {
+					return nil, fmt.Errorf("line assignment \"%s\" of bus \"%s\" with start time \"%s\" has no equivalent in time table", line.id, scenBus.Id, asmgt.Start)
+				}
+				index := 0
+				for _, wp := range line.stops {
+					waypoint := WayPoint{
+						IsStop:    true,
+						Name:      wp.name,
+						Latitude:  wp.latitude,
+						Longitude: wp.longitude,
+						Departure: departures[index],
+					}
+					waypoints = append(waypoints, waypoint)
+					index = index + 1
+				}
+				assignment.WayPoints = waypoints
+			} else {
+				waypoints := make([]WayPoint, 0, len(asmgt.Coordinates))
+				for _, coordinate := range asmgt.Coordinates {
+					waypoint := WayPoint{
+						IsStop:    false,
+						Name:      "custom waypoint",
+						Latitude:  coordinate[0],
+						Longitude: coordinate[1],
+					}
+					waypoints = append(waypoints, waypoint)
+				}
+				assignment.WayPoints = waypoints
+			}
+			assignments = append(assignments, assignment)
+			bus.Assignments = assignments
+		}
+		result = append(result, bus)
+	}
+	return result, nil
+}
+
 type scenario struct {
 	Start          string
 	StopDefinition string `json:"stopDefinition"`
@@ -118,35 +182,29 @@ type scenario struct {
 	}
 	Buses []struct {
 		Id          string
-		Assignments []ioAssignment
+		Assignments []struct {
+			Start       string
+			Line        string
+			Coordinates [][2]float64
+		}
 	}
-}
-
-type location struct {
-	Lat       float64
-	Lon       float64
-	Reference string
-}
-
-type ioAssignment struct {
-	Start routing.Time
-	Line  *string
-	GoTo  *location `yaml:"goTo"`
 }
 
 type model struct {
 	start Time
 	stops map[StopId]Stop
 	lines []Line
+	buses []Bus
 }
 
 func (m *model) Buses() []Bus {
-	return []Bus{}
+	return m.buses
 }
 
 func (m *model) String() string {
 	result := fmt.Sprintf("Start Time: %v\n", m.start)
 	result = result + fmt.Sprintf("Stops: %d\n", len(m.stops))
-	result = result + fmt.Sprintf("Lines: %d", len(m.lines))
+	result = result + fmt.Sprintf("Lines: %d\n", len(m.lines))
+	result = result + fmt.Sprintf("Buses: %d", len(m.Buses()))
 	return result
 }

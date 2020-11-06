@@ -17,22 +17,24 @@ type Bus struct {
 
 type Assignment struct {
 	Name      string
+	Line      *Line
 	Departure Time
 	WayPoints []WayPoint
 }
 
 type WayPoint struct {
+	Departure Time
 	IsStop    bool
 	Name      string
 	Latitude  float64
 	Longitude float64
 }
 
-func (w *WayPoint) Lat() float64 {
+func (w WayPoint) Lat() float64 {
 	return w.Latitude
 }
 
-func (w *WayPoint) Lon() float64 {
+func (w WayPoint) Lon() float64 {
 	return w.Longitude
 }
 
@@ -145,4 +147,22 @@ type Line struct {
 
 func (l *Line) String() string {
 	return fmt.Sprintf("%s(%s)", l.name, l.id)
+}
+
+func (l *Line) DepartureTimes(start Time) []Time {
+	departures := l.departures[l.stops[0].id]
+	index := 0
+	departure := departures[0]
+	for departure != start && index < len(departures) {
+		departure = departures[index]
+		index = index + 1
+	}
+	if index == len(departures) {
+		return nil
+	}
+	result := make([]Time, 0, len(departures))
+	for _, stop := range l.stops {
+		result = append(result, l.departures[stop.id][index])
+	}
+	return result
 }

@@ -14,6 +14,5 @@ buses:
       - start: 6:35
         line: A-outbound
       - start: 6:50
-        goTo:
-          reference: node/4268777577
+        coordinates: [[9.9404665, 49.7765994]]
 
