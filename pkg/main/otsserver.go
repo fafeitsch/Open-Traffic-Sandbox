@@ -34,31 +34,4 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not start server: %v", err)
 	}
-	// scenario, err := load(os.Args)
-	// if err != nil {
-	// 	log.Fatalf("cannot read scenario data: %v", err)
-	// }
-	// channels := make([]<-chan domain.VehicleLocation, 0, len(scenario.Vehicles))
-	// for _, routedVehicle := range scenario.Vehicles {
-	// 	vehicle := routedVehicle
-	// 	vehicle.HeartBeat = createShiftedTimer(scenario.Start)
-	// 	channel := make(chan domain.VehicleLocation)
-	// 	channels = append(channels, channel)
-	// 	go vehicle.StartJourney(channel)
-	// }
-	// consumer := channels2.Merge(channels)
-	//
-	// clientContainer := server.NewClientContainer()
-	// http.Handle("/sockets", clientContainer)
-	//
-	// http.Handle("/", http.FileServer(http.Dir("webfrontend/dist/webfrontend")))
-	//
-	// go func() {
-	// 	for location := range consumer {
-	// 		clientContainer.BroadcastJson(location)
-	// 	}
-	// }()
-	// defer func() { _ = clientContainer.Close() }()
-	//
-	// http.ListenAndServe(":8000", nil)
 }

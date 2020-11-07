@@ -1,9 +1,0 @@
-start: 2020-08-27T05:01:00Z
-stopDefinition: stops.geojson
-lines:
-vehicles:
-  - id: "V1"
-    assignments:
-      - start: 2020-08-27T05:01:00Z
-        line: "13-not found"
-
