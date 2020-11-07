@@ -2,7 +2,7 @@ package osrmclient
 
 import (
 	"fmt"
-	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/domain"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/model"
 	"github.com/karmadon/gosrm"
 	geo "github.com/paulmach/go.geo"
 	"github.com/twpayne/go-polyline"
@@ -18,7 +18,7 @@ type RouteService struct {
 // NewRouteService creates a route service and sets the most important
 // settings for connecting to the OSRM server. The connection parameter
 // denotes the address to connect to, i.e. http://localhost:5000/
-func NewRouteService(connection string) *RouteService {
+func NewRouteService(connection string) model.RouteService {
 	localUrl := url.URL{Host: connection}
 	options := &gosrm.Options{
 		Url:            localUrl,
@@ -28,19 +28,19 @@ func NewRouteService(connection string) *RouteService {
 		RequestTimeout: 5,
 	}
 	client := gosrm.NewClient(options)
-	return &RouteService{client: client}
+	service := RouteService{client: client}
+	return service.QueryRoute
 }
 
 // QueryRoute sends a request to the OSRM server, asking for the shortest path
 // to connect the given waypoints the the defined order (no, this is not a TSP here :)).
 // When the request is responded successfully, the shortest path is returned as well as the length
 // of the shortest path. Otherwise, a non-nil error is returned.
-func (r *RouteService) QueryRoute(waypoints domain.Coordinates) (domain.Coordinates, float64, error) {
+func (r *RouteService) QueryRoute(from model.Coordinate, to model.Coordinate) ([]model.Coordinate, float64, error) {
 	pointSet := geo.NewPointSet()
-	for index, waypoints := range waypoints {
-		point := geo.NewPoint(waypoints.Lon, waypoints.Lat)
-		pointSet.InsertAt(index, point)
-	}
+	point := geo.NewPoint(from.Lon(), from.Lat())
+	pointSet.InsertAt(0, point)
+	pointSet.InsertAt(1, geo.NewPoint(to.Lon(), to.Lat()))
 	overview := "full"
 	routeRequest := &gosrm.RouteRequest{
 		Coordinates: *pointSet,
@@ -56,6 +56,19 @@ func (r *RouteService) QueryRoute(waypoints domain.Coordinates) (domain.Coordina
 	if err != nil {
 		return nil, 0, fmt.Errorf("Could not decode polyline geometry: %v", err)
 	}
-	result := domain.PointsToCoordinates(coords)
+	result := make([]model.Coordinate, 0, len(coords))
+	for _, coord := range coords {
+		result = append(result, coordinate(coord))
+	}
 	return result, route.Distance, nil
+}
+
+type coordinate []float64
+
+func (c coordinate) Lat() float64 {
+	return c[0]
+}
+
+func (c coordinate) Lon() float64 {
+	return c[1]
 }

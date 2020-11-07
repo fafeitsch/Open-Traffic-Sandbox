@@ -2,23 +2,38 @@ package main
 
 import (
 	"fmt"
-	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/domain"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/bus"
 	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/model"
 	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/osrmclient"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/server"
 	"log"
-	"os"
-	"time"
+	"net/http"
 )
 
 func main() {
 	fmt.Printf("Loading scenario file …\n")
-	model, err := model.Init("samples/wuerzburg(fictive)")
+	mdl, err := model.Init("samples/wuerzburg(fictive)")
 	if err != nil {
 		log.Fatalf("could not understand scenario file: %v", err)
 	}
 	fmt.Printf("Scenario loaded successfully, here is some information about it:\n")
 	fmt.Println()
-	fmt.Printf("%v", model)
+	fmt.Printf("%v", mdl)
+	fmt.Println()
+	fmt.Printf("Starting simulation …")
+
+	clientContainer := server.NewClientContainer()
+	http.Handle("/sockets", clientContainer)
+	http.Handle("/", http.FileServer(http.Dir("webfrontend/dist/webfrontend")))
+
+	publisher := func(position model.BusPosition) {
+		clientContainer.BroadcastJson(position)
+	}
+	bus.NewDispatcher(mdl, publisher, osrmclient.NewRouteService("http://localhost:5000/")).Start(mdl.Start())
+	err = http.ListenAndServe(":8000", nil)
+	if err != nil {
+		log.Fatalf("could not start server: %v", err)
+	}
 	// scenario, err := load(os.Args)
 	// if err != nil {
 	// 	log.Fatalf("cannot read scenario data: %v", err)
@@ -46,46 +61,4 @@ func main() {
 	// defer func() { _ = clientContainer.Close() }()
 	//
 	// http.ListenAndServe(":8000", nil)
-}
-
-func load(args []string) (*domain.LoadedScenario, error) {
-	if len(args) != 3 {
-		log.Fatalf("missing scenario definition and stop definition file")
-	}
-	scenarioFile, err := os.Open(args[1])
-	if err != nil {
-		return nil, fmt.Errorf("could not read input file: %v", err)
-	}
-	defer func() { _ = scenarioFile.Close() }()
-	stopFile, err := os.Open(args[2])
-	if err != nil {
-		return nil, fmt.Errorf("could not read stop file: %v", err)
-	}
-	defer func() { _ = stopFile.Close() }()
-	stops, err := domain.LoadStops(stopFile)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse stop file: %v", err)
-	}
-	loader := domain.VehicleLoader{
-		RouteService:      osrmclient.NewRouteService("http://localhost:5000/").QueryRoute,
-		ExternalLocations: stops,
-	}
-
-	scenario, err := loader.SetupVehicles(scenarioFile)
-	if err != nil {
-		return nil, fmt.Errorf("Could not read input file %s: %v", os.Args[1], err)
-	}
-	return scenario, nil
-}
-
-func createShiftedTimer(start time.Time) chan time.Time {
-	ticker := time.NewTicker(100 * time.Millisecond)
-	difference := time.Now().Sub(start)
-	result := make(chan time.Time)
-	go func() {
-		for tick := range ticker.C {
-			result <- tick.Add(-difference)
-		}
-	}()
-	return result
 }

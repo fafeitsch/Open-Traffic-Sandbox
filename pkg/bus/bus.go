@@ -2,6 +2,7 @@ package bus
 
 import (
 	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/model"
+	"log"
 	"math"
 )
 
@@ -9,14 +10,14 @@ const speedMs = 40 / 3.6
 
 type bus struct {
 	id             model.BusId
-	dispatcher     Dispatcher
+	dispatcher     *Dispatcher
 	assignments    []model.Assignment
 	gps            model.RouteService
-	heartBeatTimer model.Timer
+	heartBeatTimer model.Ticker
 	position       model.Coordinate
 }
 
-func (b *bus) start(timer model.Timer) {
+func (b *bus) start(timer model.Ticker) {
 	b.heartBeatTimer = timer
 	for _, assignment := range b.assignments {
 		b.handleAssignment(assignment)
@@ -34,7 +35,10 @@ func (b *bus) handleAssignment(a model.Assignment) {
 	}
 
 	for _, wayPoint := range a.WayPoints {
-		route, _, _ := b.gps(b.position, &wayPoint)
+		route, _, err := b.gps(b.position, &wayPoint)
+		if err != nil {
+			log.Printf("bus %s: could not find route, skipping route: %v", b.id, err)
+		}
 		for len(route) > 0 {
 			current, ok := <-b.heartBeatTimer.HeartBeat
 			if !ok {
@@ -43,6 +47,7 @@ func (b *bus) handleAssignment(a model.Assignment) {
 			deltaTime := current.Sub(last).Seconds()
 			driven := speedMs * deltaTime
 			route = b.drive(route, driven)
+			last = current
 		}
 	}
 }

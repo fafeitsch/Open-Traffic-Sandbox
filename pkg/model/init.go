@@ -17,6 +17,7 @@ type BusModel interface {
 
 type Model interface {
 	BusModel
+	Start() Time
 }
 
 func Init(directory string) (Model, error) {
@@ -63,7 +64,7 @@ func loadStops(path string) (map[StopId]Stop, error) {
 	stops := make(map[StopId]Stop)
 	for _, feature := range collection.Features {
 		id := StopId(fmt.Sprintf("%v", feature.ID))
-		stop := Stop{id: id, latitude: feature.Geometry.Point[0], longitude: feature.Geometry.Point[1]}
+		stop := Stop{id: id, latitude: feature.Geometry.Point[1], longitude: feature.Geometry.Point[0]}
 		if name, ok := feature.Properties["name"]; ok {
 			stop.name = fmt.Sprintf("%v", name)
 		}
@@ -207,4 +208,8 @@ func (m *model) String() string {
 	result = result + fmt.Sprintf("Lines: %d\n", len(m.lines))
 	result = result + fmt.Sprintf("Buses: %d", len(m.Buses()))
 	return result
+}
+
+func (m *model) Start() Time {
+	return m.start
 }

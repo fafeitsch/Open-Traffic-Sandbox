@@ -90,29 +90,31 @@ func (t Time) String() string {
 	return fmt.Sprintf("%02d:%02d", hour, minute)
 }
 
-type Timer struct {
-	HeartBeat     <-chan Time
-	originalTimer time.Timer
+type Ticker struct {
+	HeartBeat      <-chan Time
+	heartBeat      chan Time
+	originalTicker *time.Ticker
 }
 
-func (t *Timer) Stop() bool {
-	return t.originalTimer.Stop()
+func (t *Ticker) Stop() {
+	t.originalTicker.Stop()
+	close(t.heartBeat)
 }
 
-func NewTimer(interval time.Duration, start Time) Timer {
+func NewTicker(interval time.Duration, start Time) Ticker {
 	last := time.Now()
-	originalTimer := time.NewTimer(interval)
+	originalTicker := time.NewTicker(interval)
 	channel := make(chan Time)
 	go func() {
 		current := start
-		for t := range originalTimer.C {
+		for t := range originalTicker.C {
 			gap := t.Sub(last)
-			current = Time(int(current) + int(gap*time.Millisecond))
-			t = last
+			current = Time(int(current) + int(gap/time.Millisecond))
+			last = t
 			channel <- current
 		}
 	}()
-	return Timer{HeartBeat: channel}
+	return Ticker{heartBeat: channel, HeartBeat: channel, originalTicker: originalTicker}
 }
 
 type StopId string
