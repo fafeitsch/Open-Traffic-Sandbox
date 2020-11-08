@@ -2,7 +2,6 @@ package osrmclient
 
 import (
 	"fmt"
-	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/domain"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -14,7 +13,6 @@ import (
 
 func TestRouteService_QueryRoute(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		coordinates := []domain.Coordinate{{Lat: 5, Lon: 6}, {Lat: 7, Lon: 8}}
 		successOsrm := func(writer http.ResponseWriter, request *http.Request) {
 			assert.Equal(t, "full", request.URL.Query()["overview"][0], "overview query param should be full")
 			assert.Equal(t, "false", request.URL.Query()["generate_hints"][0], "generate hints should be disabled")
@@ -27,7 +25,7 @@ func TestRouteService_QueryRoute(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(successOsrm))
 		defer server.Close()
 		service := NewRouteService(server.URL + "/")
-		route, length, err := service.QueryRoute(coordinates)
+		route, length, err := service(&coordinate{5, 6}, &coordinate{7, 8})
 		require.Nil(t, err)
 		assert.Equal(t, 7634.4, length, "length was not computed correctly")
 		assert.Equal(t, 396, len(route), "number of waypoints wrong")
@@ -39,7 +37,7 @@ func TestRouteService_QueryRoute(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(successOsrm))
 		defer server.Close()
 		service := NewRouteService(server.URL + "/")
-		route, length, err := service.QueryRoute([]domain.Coordinate{})
+		route, length, err := service(coordinate{5, 6}, coordinate{7, 8})
 		require.EqualError(t, err, "Request failed: [GOSRM][ERROR]: The request size violates one of the service specific request size restrictions")
 		assert.Equal(t, 0.0, length, "length should be 0 in case of an error")
 		assert.Nil(t, route, "route should be nil in case of an error")

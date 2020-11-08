@@ -135,7 +135,7 @@ func loadBuses(scenario scenario, lines []Line) ([]Bus, error) {
 				assignment.Line = line
 				assignment.Name = line.name
 				waypoints := make([]WayPoint, 0, len(line.stops))
-				departures := line.DepartureTimes(assignment.Departure)
+				departures := line.TourTimes(assignment.Departure)
 				if departures == nil {
 					return nil, fmt.Errorf("line assignment \"%s\" of bus \"%s\" with start time \"%s\" has no equivalent in time table", line.id, scenBus.Id, asmgt.Start)
 				}

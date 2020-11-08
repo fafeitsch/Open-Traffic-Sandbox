@@ -24,7 +24,6 @@ func (c *client) activateOutgoingMessages() {
 		_ = c.networkConnection.Close()
 		c.onUnregister(c)
 	}()
-	isFree := true
 	for {
 		select {
 		case message, ok := <-c.jsonSendChannel:
@@ -32,13 +31,7 @@ func (c *client) activateOutgoingMessages() {
 				_ = c.networkConnection.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
-			if isFree {
-				isFree = false
-				go func() {
-					defer func() { isFree = true }()
-					_ = c.networkConnection.WriteJSON(message)
-				}()
-			}
+			_ = c.networkConnection.WriteJSON(message)
 		}
 	}
 }
