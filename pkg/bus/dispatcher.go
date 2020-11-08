@@ -18,7 +18,7 @@ func NewDispatcher(mdl model.BusModel, publisher model.Publisher, routeService m
 func (d *Dispatcher) Start(start model.Time) {
 	for _, modelBus := range d.busModel.Buses() {
 		bus := bus{id: modelBus.Id, assignments: modelBus.Assignments, gps: d.gps, dispatcher: d, position: modelBus.Assignments[0].WayPoints[0]}
-		timer := model.NewTicker(start, 1*time.Second, 1*time.Second)
+		timer := model.NewTicker(start, 500*time.Millisecond, 500*time.Millisecond)
 		go bus.start(timer)
 	}
 }

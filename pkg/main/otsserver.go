@@ -12,7 +12,7 @@ import (
 
 func main() {
 	fmt.Printf("Loading scenario file …\n")
-	mdl, err := model.Init("samples/wuerzburg(fictive)")
+	mdl, err := model.Init("samples/wuerzburg(fictional)")
 	if err != nil {
 		log.Fatalf("could not understand scenario file: %v", err)
 	}

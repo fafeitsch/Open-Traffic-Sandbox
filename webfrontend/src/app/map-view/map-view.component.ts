@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
+
 declare let L;
 import '../../../node_modules/leaflet/dist/leaflet';
 import {VehicleLocationService} from '../vehicle-location.service';
@@ -10,7 +11,8 @@ import {VehicleLocationService} from '../vehicle-location.service';
 })
 export class MapViewComponent implements OnInit {
 
-  constructor(private vehicleLocationService: VehicleLocationService) { }
+  constructor(private vehicleLocationService: VehicleLocationService) {
+  }
 
   ngOnInit() {
     const map = L.map('map').setView([51.505, -0.09], 13);
@@ -22,6 +24,7 @@ export class MapViewComponent implements OnInit {
     const markers = {};
 
     this.vehicleLocationService.locations.subscribe(location => {
+        console.log(location);
         if (!markers[location.vehicleId]) {
           map.setView(location.coordinate);
           const marker = L.circleMarker({lat: location.coordinate[0], lon: location.coordinate[1]}, {fillOpacity: 1}).addTo(map);
