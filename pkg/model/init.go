@@ -1,3 +1,5 @@
+// Package model represents the static Model of a scenario and provides the Init function to
+// load such a scenario.
 package model
 
 import (
@@ -11,15 +13,19 @@ import (
 	"strings"
 )
 
+// BusModel is a model designed for all bus stuff.
 type BusModel interface {
 	Buses() []Bus
 }
 
+// Model represent the static data of a scenario. The model does not change over time, i.e. bus positions etc. are
+// not stored in the model.
 type Model interface {
 	BusModel
 	Start() Time
 }
 
+// Init loads the scenario from the provided directory and parses it.
 func Init(directory string) (Model, error) {
 	path := filepath.Join(directory, "scenario.yaml")
 	file, err := os.Open(path)
@@ -38,7 +44,7 @@ func Init(directory string) (Model, error) {
 	}
 	stops, err := loadStops(filepath.Join(directory, scenario.StopDefinition))
 	if err != nil {
-		return nil, fmt.Errorf("loading the stops from the referenced file \"%s\" failed: %v", scenario.StopDefinition, err)
+		return nil, fmt.Errorf("loading the Stops from the referenced file \"%s\" failed: %v", scenario.StopDefinition, err)
 	}
 	model.stops = stops
 	model.lines, err = loadLines(scenario, directory, stops)
@@ -103,7 +109,7 @@ next:
 			}
 			departureMap[stopId] = departures
 		}
-		result = append(result, Line{id: LineId(line.Id), name: line.Name, stops: stopList, departures: departureMap})
+		result = append(result, Line{Id: LineId(line.Id), Name: line.Name, Stops: stopList, departures: departureMap})
 		file.Close()
 	}
 	if len(loadingErrors) != 0 {
@@ -115,7 +121,7 @@ next:
 func loadBuses(scenario scenario, lines []Line) ([]Bus, error) {
 	lineMap := make(map[LineId]*Line)
 	for _, line := range lines {
-		lineMap[line.id] = &line
+		lineMap[line.Id] = &line
 	}
 	result := make([]Bus, 0, len(scenario.Buses))
 	for _, scenBus := range scenario.Buses {
@@ -133,14 +139,14 @@ func loadBuses(scenario scenario, lines []Line) ([]Bus, error) {
 					return nil, fmt.Errorf("line \"%s\" of bus \"%s\" not found", asmgt.Line, scenBus.Id)
 				}
 				assignment.Line = line
-				assignment.Name = line.name
-				waypoints := make([]WayPoint, 0, len(line.stops))
+				assignment.Name = line.Name
+				waypoints := make([]WayPoint, 0, len(line.Stops))
 				departures := line.TourTimes(assignment.Departure)
 				if departures == nil {
-					return nil, fmt.Errorf("line assignment \"%s\" of bus \"%s\" with start time \"%s\" has no equivalent in time table", line.id, scenBus.Id, asmgt.Start)
+					return nil, fmt.Errorf("line assignment \"%s\" of bus \"%s\" with start time \"%s\" has no equivalent in time table", line.Id, scenBus.Id, asmgt.Start)
 				}
 				index := 0
-				for _, wp := range line.stops {
+				for _, wp := range line.Stops {
 					waypoint := WayPoint{
 						IsStop:    true,
 						Name:      wp.name,

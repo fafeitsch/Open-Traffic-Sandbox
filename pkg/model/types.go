@@ -54,7 +54,7 @@ type RouteService func(Coordinate, Coordinate) ([]Coordinate, float64, error)
 // BusPosition describes the position of a certain bus at the current moment. BusPosition is meant
 // to be sent to subscribers, possible over network. Thus, we keep this struct small.
 type BusPosition struct {
-	BusId    BusId      `json:"id"`
+	BusId    BusId      `json:"Id"`
 	Location [2]float64 `json:"loc"`
 }
 
@@ -168,22 +168,22 @@ type LineId string
 
 // Line represents a predefined path and departures times for buses.
 type Line struct {
-	id         LineId
-	name       string
-	stops      []*Stop
+	Id         LineId
+	Name       string
+	Stops      []*Stop
 	departures map[StopId][]Time
 }
 
 func (l *Line) String() string {
-	return fmt.Sprintf("%s(%s)", l.name, l.id)
+	return fmt.Sprintf("%s(%s)", l.Name, l.Id)
 }
 
 // TourTimes returns all departure times of the tour starting at start.
 // If no tour of this line starts at the given time, then nil is returned.
-// If the line is not well defined (e.g. no stops, no adequate departures) then the
+// If the line is not well defined (e.g. no Stops, no adequate departures) then the
 // behaviour of this method is not well defined. It will most likely panic.
 func (l *Line) TourTimes(start Time) []Time {
-	departures := l.departures[l.stops[0].id]
+	departures := l.departures[l.Stops[0].id]
 	index := 0
 	departure := departures[0]
 	for departure != start && index < len(departures)-1 {
@@ -194,7 +194,7 @@ func (l *Line) TourTimes(start Time) []Time {
 		return nil
 	}
 	result := make([]Time, 0, len(departures))
-	for _, stop := range l.stops {
+	for _, stop := range l.Stops {
 		result = append(result, l.departures[stop.id][index])
 	}
 	return result

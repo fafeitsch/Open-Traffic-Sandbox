@@ -38,7 +38,7 @@ func ExampleLine_TourTimes() {
 		"stopC": {baseTime.Add(3 * time.Minute), baseTime.Add(12 * time.Minute), baseTime.Add(19 * time.Minute)},
 		"stopD": {baseTime.Add(1 * time.Minute), baseTime.Add(13 * time.Minute), baseTime.Add(20 * time.Minute)},
 	}
-	line := Line{stops: stops, departures: departures}
+	line := Line{Stops: stops, departures: departures}
 	fmt.Printf("Departures for second tour: %v\n", line.TourTimes(baseTime.Add(7*time.Minute)))
 	fmt.Printf("Returns nil if tour not found: %v\n", line.TourTimes(baseTime.Add(2*time.Minute)) == nil)
 	// Output: Departures for second tour: [16:42 16:44 16:47 16:48]
