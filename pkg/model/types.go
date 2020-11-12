@@ -80,6 +80,16 @@ func ParseTime(timeString string) (Time, error) {
 	return Time((hour*60 + minute) * 60 * 1000), nil
 }
 
+// MustParseTime haves nearly identical to ParseTime. The only difference is that MustParseTime will panic
+// if the timeString cannot be parsed, whereas ParseTime returns a non-nil error.
+func MustParseTime(timeString string) Time {
+	result, err := ParseTime(timeString)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
 // HourMinute returns the hour and the minute of the time.
 func (t Time) HourMinute() (int, int) {
 	minutes := int(t) / 1000 / 60

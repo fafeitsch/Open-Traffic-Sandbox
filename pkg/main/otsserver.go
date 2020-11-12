@@ -29,7 +29,8 @@ func main() {
 	publisher := func(position model.BusPosition) {
 		clientContainer.BroadcastJson(position)
 	}
-	bus.NewDispatcher(mdl, publisher, osrmclient.NewRouteService("http://localhost:5000/")).Start(mdl.Start())
+	dispatcher := bus.NewDispatcher(mdl, publisher, osrmclient.NewRouteService("http://localhost:5000/"))
+	go dispatcher.Run(mdl.Start())
 	err = http.ListenAndServe(":8000", nil)
 	if err != nil {
 		log.Fatalf("could not start server: %v", err)

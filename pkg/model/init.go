@@ -209,7 +209,7 @@ func (m *model) Buses() []Bus {
 }
 
 func (m *model) String() string {
-	result := fmt.Sprintf("Start Time: %v\n", m.start)
+	result := fmt.Sprintf("Run Time: %v\n", m.start)
 	result = result + fmt.Sprintf("Stops: %d\n", len(m.stops))
 	result = result + fmt.Sprintf("Lines: %d\n", len(m.lines))
 	result = result + fmt.Sprintf("Buses: %d", len(m.Buses()))

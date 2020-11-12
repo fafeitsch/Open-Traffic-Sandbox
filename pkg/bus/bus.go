@@ -53,16 +53,20 @@ func (b *bus) handleAssignment(a model.Assignment) {
 }
 
 func (b *bus) drive(route []model.Coordinate, distanceToDrive float64) []model.Coordinate {
+	defer b.dispatcher.positionStatement(b, b.position)
+	if b.position == route[0] {
+		route = route[1:]
+	}
 	distanceToNext := distanceTo(b.position, route[0])
 	newRoute := route
 	for distanceToDrive >= distanceToNext && len(newRoute) > 1 {
 		distanceToDrive = distanceToDrive - distanceToNext
 		distanceToNext = distanceTo(newRoute[0], newRoute[1])
-		b.position = newRoute[0]
+		b.position = &coordinate{newRoute[0].Lat(), newRoute[0].Lon()}
 		newRoute = newRoute[1:]
 	}
 	if distanceToDrive >= distanceToNext {
-		b.position = newRoute[0]
+		b.position = &coordinate{newRoute[0].Lat(), newRoute[0].Lon()}
 		return []model.Coordinate{}
 	}
 	lambda := distanceToDrive / distanceToNext
@@ -71,7 +75,6 @@ func (b *bus) drive(route []model.Coordinate, distanceToDrive float64) []model.C
 	lat := b.position.Lat() + lambda*deltaX
 	lon := b.position.Lon() + lambda*deltaY
 	b.position = &coordinate{lat: lat, lon: lon}
-	b.dispatcher.positionStatement(b, b.position)
 	return newRoute
 }
 
