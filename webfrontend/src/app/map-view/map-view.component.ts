@@ -1,15 +1,18 @@
-import {Component, OnInit} from '@angular/core';
-
-declare let L;
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import '../../../node_modules/leaflet/dist/leaflet';
 import {VehicleLocationService} from '../vehicle-location.service';
+import {Subscription} from 'rxjs';
+
+declare let L;
 
 @Component({
   selector: 'app-map-view',
   templateUrl: './map-view.component.html',
   styleUrls: ['./map-view.component.css']
 })
-export class MapViewComponent implements OnInit {
+export class MapViewComponent implements OnInit, OnDestroy {
+
+  private locationSubscription = Subscription.EMPTY;
 
   constructor(private vehicleLocationService: VehicleLocationService) {
   }
@@ -23,16 +26,20 @@ export class MapViewComponent implements OnInit {
 
     const markers = {};
 
-    this.vehicleLocationService.locations.subscribe(location => {
-        console.log(location);
+    this.locationSubscription = this.vehicleLocationService.listenToLocations().subscribe(location => {
         if (!markers[location.vehicleId]) {
           map.setView(location.coordinate);
-          const marker = L.circleMarker({lat: location.coordinate[0], lon: location.coordinate[1]}, {fillOpacity: 1}).addTo(map);
-          markers[location.vehicleId] = marker;
+          markers[location.vehicleId] = L.circleMarker({
+            lat: location.coordinate[0],
+            lon: location.coordinate[1]
+          }, {fillOpacity: 1}).addTo(map);
         }
         markers[location.vehicleId].setLatLng({lat: location.coordinate[0], lon: location.coordinate[1]});
       }
     );
   }
 
+  ngOnDestroy(): void {
+    this.locationSubscription.unsubscribe();
+  }
 }

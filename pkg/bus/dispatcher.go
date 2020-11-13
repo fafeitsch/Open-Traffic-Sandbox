@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+// Dispatcher orchestrates all bus movements in the system. A Dispatcher should always
+// be created with NewDispatcher.
 type Dispatcher struct {
 	busModel       model.BusModel
 	gps            model.RouteService
@@ -14,10 +16,12 @@ type Dispatcher struct {
 	SimulationTick time.Duration
 }
 
+// NewDispatcher creates a dispatcher with the given parameters.
 func NewDispatcher(mdl model.BusModel, publisher model.Publisher, routeService model.RouteService) *Dispatcher {
 	return &Dispatcher{busModel: mdl, publish: publisher, gps: routeService, RealtimeTick: 500 * time.Millisecond, SimulationTick: 500 * time.Millisecond}
 }
 
+// Run starts all busses the dispatcher is aware of. This method blocks until all buses have finished all their assignments.
 func (d *Dispatcher) Run(start model.Time) {
 	var wg sync.WaitGroup
 	for _, modelBus := range d.busModel.Buses() {
