@@ -1,11 +1,13 @@
 import {Injectable} from '@angular/core';
-import {Observable} from 'rxjs';
-import {map} from 'rxjs/operators';
-import {WebsocketService} from './websocket.service';
+import {Observable, of} from 'rxjs';
+import {delay, filter, map, retryWhen, switchMap} from 'rxjs/operators';
+import {environment} from '../environments/environment';
+import {WebSocketSubject} from 'rxjs/internal-compatibility';
+import {webSocket} from 'rxjs/webSocket';
 
 export interface VehicleLocation {
-  vehicleId: string;
-  coordinate: number[];
+  id: string;
+  loc: number[];
 }
 
 @Injectable({
@@ -13,17 +15,24 @@ export interface VehicleLocation {
 })
 export class VehicleLocationService {
 
-  constructor(private wsService: WebsocketService) {
-  }
+  private connection$: WebSocketSubject<VehicleLocation>;
 
-  listenToLocations(): Observable<VehicleLocation> {
-    return this.wsService.connect('ws://localhost:8000/sockets').pipe(map(
-      (response: MessageEvent): VehicleLocation => {
-        const data = JSON.parse(response.data);
-        return {
-          vehicleId: data.id,
-          coordinate: data.loc
-        };
-      }));
+  connect(): Observable<VehicleLocation> {
+    let url = location.origin;
+    if (!environment.production) {
+      url = environment.apiUrl;
+    }
+    return of(url).pipe(
+      filter(apiUrl => !!apiUrl),
+      map(apiUrl => apiUrl.replace(/^http/, 'ws') + '/sockets'),
+      switchMap(wsUrl => {
+        if (this.connection$) {
+          return this.connection$;
+        } else {
+          this.connection$ = webSocket(wsUrl);
+          return this.connection$;
+        }
+      }),
+      retryWhen((errors) => errors.pipe(delay(10))));
   }
 }

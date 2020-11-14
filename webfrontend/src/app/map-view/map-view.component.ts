@@ -26,15 +26,15 @@ export class MapViewComponent implements OnInit, OnDestroy {
 
     const markers = {};
 
-    this.locationSubscription = this.vehicleLocationService.listenToLocations().subscribe(location => {
-        if (!markers[location.vehicleId]) {
-          map.setView(location.coordinate);
-          markers[location.vehicleId] = L.circleMarker({
-            lat: location.coordinate[0],
-            lon: location.coordinate[1]
+    this.locationSubscription = this.vehicleLocationService.connect().subscribe(location => {
+        if (!markers[location.id]) {
+          map.setView(location.loc);
+          markers[location.id] = L.circleMarker({
+            lat: location.loc[0],
+            lon: location.loc[1]
           }, {fillOpacity: 1}).addTo(map);
         }
-        markers[location.vehicleId].setLatLng({lat: location.coordinate[0], lon: location.coordinate[1]});
+        markers[location.id].setLatLng({lat: location.loc[0], lon: location.loc[1]});
       }
     );
   }
