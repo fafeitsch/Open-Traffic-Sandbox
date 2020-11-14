@@ -6,8 +6,6 @@ import (
 	"math"
 )
 
-const speedMs = 40 / 3.6
-
 type bus struct {
 	id             model.BusId
 	dispatcher     *Dispatcher
@@ -15,6 +13,7 @@ type bus struct {
 	gps            model.RouteService
 	heartBeatTimer model.Ticker
 	position       model.Coordinate
+	speed          int
 }
 
 func (b *bus) start(timer model.Ticker) {
@@ -45,7 +44,7 @@ func (b *bus) handleAssignment(a model.Assignment) {
 				return
 			}
 			deltaTime := current.Sub(last).Seconds()
-			driven := speedMs * deltaTime
+			driven := (float64(b.speed) / 3.6) * deltaTime
 			route = b.drive(route, driven)
 			last = current
 		}

@@ -5,7 +5,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
-	"time"
 )
 
 type mockModel struct {
@@ -45,8 +44,8 @@ func TestDispatcher_Start(t *testing.T) {
 		return []model.Coordinate{start, target}, 0, nil
 	}
 	dispatcher := NewDispatcher(&mockModel{buses: []model.Bus{bus1}}, publisher, routeService)
-	dispatcher.RealtimeTick = 1 * time.Millisecond
-	dispatcher.SimulationTick = 10 * time.Second
+	dispatcher.Frequency = 1000
+	dispatcher.Warp = 10000
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {

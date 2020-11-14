@@ -7,7 +7,7 @@ import (
 
 func ExampleNewTicker() {
 	start, _ := ParseTime("7:34")
-	ticker := NewTicker(start, 1*time.Minute, 1*time.Millisecond)
+	ticker := NewTicker(start, 1000, 60*1000)
 	time1 := <-ticker.HeartBeat
 	time2 := <-ticker.HeartBeat
 	time3 := <-ticker.HeartBeat

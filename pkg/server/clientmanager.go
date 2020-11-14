@@ -49,8 +49,7 @@ func NewClientContainer() *ClientContainer {
 
 // ServeHTTP registers new websocket clients to the container. All registered clients will receive updates
 // when the BroadcastJson method is called on the client container.
-func (w *ClientContainer) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	setupCORS(&writer, request)
+func (c *ClientContainer) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		// we do nothing here because the upgrader internally has already notified the client about the error.
@@ -60,31 +59,25 @@ func (w *ClientContainer) ServeHTTP(writer http.ResponseWriter, request *http.Re
 		networkConnection: conn,
 		jsonSendChannel:   make(chan interface{}, 256),
 		onUnregister: func(unregisteredClient *client) {
-			delete(w.clients, unregisteredClient)
+			delete(c.clients, unregisteredClient)
 		},
 	}
-	w.clients[client] = true
+	c.clients[client] = true
 
 	go client.activateOutgoingMessages()
 
 }
 
-func setupCORS(w *http.ResponseWriter, req *http.Request) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-}
-
 // BroadcastJson encodes the passed interface as JSON and sends it to all currently registered clients.
-func (w *ClientContainer) BroadcastJson(v interface{}) {
-	for client, _ := range w.clients {
+func (c *ClientContainer) BroadcastJson(v interface{}) {
+	for client, _ := range c.clients {
 		client.jsonSendChannel <- v
 	}
 }
 
 // Close releases all client connections of the current clients.
-func (w *ClientContainer) Close() error {
-	for client, _ := range w.clients {
+func (c *ClientContainer) Close() error {
+	for client, _ := range c.clients {
 		close(client.jsonSendChannel)
 	}
 	return nil

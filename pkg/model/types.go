@@ -134,17 +134,18 @@ func (t *Ticker) Stop() {
 	close(t.heartBeat)
 }
 
-// NewTicker creates and starts a new ticker. The start parameter specifies the first Time to be emited
-// by the ticker. The simulation interval defines which duration lies between two successive emits of the ticker.
-// The real interval is the real duration between two successive emits. This third interval may not be accurate (see time.NewTicker).
-func NewTicker(start Time, simulationInterval time.Duration, realInterval time.Duration) Ticker {
-	originalTicker := time.NewTicker(realInterval)
+// NewTicker creates and starts a new ticker. The start parameter specifies the first Time to be emitted
+// by the ticker. The frequency denotes the frequency of consecutive emits by the ticker.
+// The duration between two ticks is multiplied by the warp argument. This third interval may not be accurate (see time.NewTicker).
+func NewTicker(start Time, frequency float64, warp float64) Ticker {
+	interval := time.Duration(float64(1.0*time.Second) / frequency)
+	originalTicker := time.NewTicker(interval)
 	channel := make(chan Time)
 	go func() {
 		last := start
 		for _ = range originalTicker.C {
 			channel <- last
-			last = last.Add(simulationInterval)
+			last = last.Add(time.Duration(float64(interval) * warp))
 		}
 	}()
 	return Ticker{heartBeat: channel, HeartBeat: channel, originalTicker: originalTicker}
