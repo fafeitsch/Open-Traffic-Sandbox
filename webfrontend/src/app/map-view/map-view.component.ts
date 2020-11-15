@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewEncapsulation} from '@angular/core';
 import '../../../node_modules/leaflet/dist/leaflet';
 import {VehicleLocationService} from '../vehicle-location.service';
 import {Subscription} from 'rxjs';
@@ -8,7 +8,8 @@ declare let L;
 @Component({
   selector: 'app-map-view',
   templateUrl: './map-view.component.html',
-  styleUrls: ['./map-view.component.css']
+  styleUrls: ['./map-view.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class MapViewComponent implements OnInit, OnDestroy {
 
@@ -18,9 +19,9 @@ export class MapViewComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    const map = L.map('map').setView([51.505, -0.09], 13);
+    const map = L.map('map').setView([49.4805, 9.5608], 13);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('http://localhost:8080/tile/{z}/{x}/{y}.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
@@ -29,10 +30,15 @@ export class MapViewComponent implements OnInit, OnDestroy {
     this.locationSubscription = this.vehicleLocationService.connect().subscribe(location => {
         if (!markers[location.id]) {
           map.setView(location.loc);
-          markers[location.id] = L.circleMarker({
+          const icon = L.divIcon({
+            className: 'map-marker',
+            iconSize: null,
+            html: `${location.id}`
+          });
+          markers[location.id] = L.marker({
             lat: location.loc[0],
             lon: location.loc[1]
-          }, {fillOpacity: 1}).addTo(map);
+          }, {fillOpacity: 1, icon: icon}).addTo(map);
         }
         markers[location.id].setLatLng({lat: location.loc[0], lon: location.loc[1]});
       }
