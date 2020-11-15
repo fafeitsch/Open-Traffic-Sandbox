@@ -6,7 +6,7 @@ import {Subscription} from 'rxjs';
 declare let L;
 
 @Component({
-  selector: 'app-map-view',
+  selector: 'map-view',
   templateUrl: './map-view.component.html',
   styleUrls: ['./map-view.component.scss'],
   encapsulation: ViewEncapsulation.None
@@ -19,7 +19,7 @@ export class MapViewComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    const map = L.map('map').setView([49.4805, 9.5608], 13);
+    const map = L.map('map').setView([49.80075, 9.93543], 16);
 
     L.tileLayer('http://localhost:8080/tile/{z}/{x}/{y}.png', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -32,6 +32,7 @@ export class MapViewComponent implements OnInit, OnDestroy {
           map.setView(location.loc);
           const icon = L.divIcon({
             className: 'map-marker',
+            iconAnchor: [10, 10],
             iconSize: null,
             html: `${location.id}`
           });
