@@ -1,37 +1,24 @@
-## Welcome to GitHub Pages
+## Open Transport Sandbox
 
-You can use the [editor on GitHub](https://github.com/fafeitsch/Open-Traffic-Sandbox/edit/master/docs/index.md) to maintain and preview the content for your website in Markdown files.
+Open Transport Sandbox (OTS) aims to be an open source simulation platform/framework.
+As of November 2020, it is in a very early stage of development and has only a limited set of features.
+At the moment, there is no official release version. It is possible to checkout and
+run the code, but for this, [some effort](dev_config.md) must be taken.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+### Features
 
-### Markdown
+Already implemented:
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+* Definition of simple timetables.
+* Definition of buses with assignments (e.g. when to serve a certain line).
+* Buses serve their assignments, and their locations are shown on a map.
+* To define stops, real OSM data can be used (gson format).
 
-```markdown
-Syntax highlighted code block
+Planned for the future:
 
-# Header 1
-## Header 2
-### Header 3
+* Incorporating passengers with routes that use the buses.
+* More information in the frontend.
+* More guidance for creating scenarios.
 
-- Bulleted
-- List
 
-1. Numbered
-2. List
 
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/fafeitsch/Open-Traffic-Sandbox/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
