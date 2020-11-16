@@ -2,8 +2,7 @@
 
 Open Transport Sandbox (OTS) aims to be an open source simulation platform/framework.
 As of November 2020, it is in a very early stage of development and has only a limited set of features.
-At the moment, there is no official release version. It is possible to checkout and
-run the code, but for this, [some effort](dev_config.md) must be taken.
+At the moment, there is no official release version.
 
 ### Features
 
@@ -19,6 +18,29 @@ Planned for the future:
 * Incorporating passengers with routes that use the buses.
 * More information in the frontend.
 * More guidance for creating scenarios.
+
+Currently out of scope:
+
+* User management and authentication
+
+### Developing and Running
+
+In order to run OTS, the following prerequisites must be met at the moment.
+
+* Go 1.14 or higher installed (needed for the backend)
+* npm installed  (needed for the frontend)
+* a running OSRM server (needed for route querying). A simple docker container is available for that ([external resource](https://hub.docker.com/r/osrm/osrm-backend/])).
+* a tile server running at `localhost:8080` (currently, the URL can only be configured directly in the code). A simple docker container is available for that ([external resource](https://github.com/Overv/openstreetmap-tile-server))
+
+Running OTS involves the following steps:
+
+1. Create a custom scenario or use the default scenario (see `samples` directory). Use the default scenario
+as blueprint for your own scenario.
+2. Configure your OSRM server with suitable data. For the default scenario, you need `unterfanken-latest.pbf`.
+3. Configure the tile server with suitable data. For the default scenario, you need `unterfanken-latest.pbf`.
+4. Build the frontend with `ng build` inside the `webfrontend` directory.
+5. Run the backend program located in `pkg/main/otsserver.go`. Use the `--help` flag for a documentation of that command.
+6. Navigate to the appropriate localhost address (default is `localhost:9551`).
 
 
 
