@@ -13,7 +13,7 @@ What will happen if I run some code in the repository?
 
 The repository consists of two code bases: The backend, written in the Go progamming language,
 and the frontend, written in Angular. If you run any of these without prior configuration,
-there most likely will be errors. You can read here for setting up a working environment.
+there most likely will be errors. You can read [here](https://fafeitsch.github.io/Open-Traffic-Sandbox) for setting up a working environment.
 
 Disclaimer
 ------------------------------------
