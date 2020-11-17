@@ -27,11 +27,11 @@ type Assignment struct {
 
 // WayPoint is a part of an assignment.
 type WayPoint struct {
-	Departure Time
-	IsStop    bool
-	Name      string
-	Latitude  float64
-	Longitude float64
+	Departure  Time
+	IsRealStop bool
+	Name       string
+	Latitude   float64
+	Longitude  float64
 }
 
 func (w WayPoint) Lat() float64 {
@@ -156,22 +156,12 @@ type StopId string
 
 // Stop represents a location where buses stop and let passengers enter and exit the bus.
 type Stop struct {
-	id        StopId
-	name      string
-	latitude  float64
-	longitude float64
-}
-
-func (s *Stop) Lat() float64 {
-	return s.latitude
-}
-
-func (s *Stop) Lon() float64 {
-	return s.longitude
+	WayPoint
+	id StopId
 }
 
 func (s *Stop) String() string {
-	return fmt.Sprintf("%s(%s)", s.name, s.id)
+	return fmt.Sprintf("%s(%s)", s.Name, s.id)
 }
 
 // LineId is used to identify a Line.
@@ -206,6 +196,10 @@ func (l *Line) TourTimes(start Time) []Time {
 	}
 	result := make([]Time, 0, len(departures))
 	for _, stop := range l.Stops {
+		if !stop.IsRealStop {
+			result = append(result, 0)
+			continue
+		}
 		result = append(result, l.departures[stop.id][index])
 	}
 	return result

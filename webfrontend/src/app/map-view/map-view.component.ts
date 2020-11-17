@@ -2,6 +2,7 @@ import {Component, OnDestroy, OnInit, ViewEncapsulation} from '@angular/core';
 import '../../../node_modules/leaflet/dist/leaflet';
 import {VehicleLocationService} from '../vehicle-location.service';
 import {Subscription} from 'rxjs';
+import {Clipboard} from '@angular/cdk/clipboard';
 
 declare let L;
 
@@ -15,7 +16,8 @@ export class MapViewComponent implements OnInit, OnDestroy {
 
   private locationSubscription = Subscription.EMPTY;
 
-  constructor(private vehicleLocationService: VehicleLocationService) {
+  constructor(private readonly vehicleLocationService: VehicleLocationService,
+              private readonly clipboard: Clipboard) {
   }
 
   ngOnInit() {
@@ -32,7 +34,7 @@ export class MapViewComponent implements OnInit, OnDestroy {
           map.setView(location.loc);
           const icon = L.divIcon({
             className: 'map-marker',
-            iconAnchor: [10, 10],
+            iconAnchor: [20, 20],
             iconSize: null,
             html: `${location.id}`
           });
@@ -44,6 +46,18 @@ export class MapViewComponent implements OnInit, OnDestroy {
         markers[location.id].setLatLng({lat: location.loc[0], lon: location.loc[1]});
       }
     );
+
+    const Coordinates = L.Control.extend({
+      onAdd: map => {
+        const container = L.DomUtil.create('div');
+        map.addEventListener('click', e => {
+          this.clipboard.copy(`${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`);
+          container.innerHTML = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+        });
+        return container;
+      }
+    });
+    map.addControl(new Coordinates({position: 'bottomleft'}));
   }
 
   ngOnDestroy(): void {

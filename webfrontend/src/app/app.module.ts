@@ -3,6 +3,7 @@ import {NgModule} from '@angular/core';
 
 import {AppComponent} from './app.component';
 import {MapViewModule} from './map-view/map-view.module';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
@@ -10,7 +11,8 @@ import {MapViewModule} from './map-view/map-view.module';
   ],
   imports: [
     BrowserModule,
-    MapViewModule
+    MapViewModule,
+    BrowserAnimationsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

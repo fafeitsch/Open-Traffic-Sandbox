@@ -22,12 +22,10 @@ export class VehicleLocationService {
     if (!environment.production) {
       url = environment.apiUrl;
     }
-    console.log(url);
     return of(url).pipe(
       filter(apiUrl => !!apiUrl),
       map(apiUrl => apiUrl.replace(/^http/, 'ws') + '/sockets'),
       switchMap(wsUrl => {
-        console.log(wsUrl);
         if (this.connection$) {
           return this.connection$;
         } else {
