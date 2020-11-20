@@ -324,6 +324,10 @@ end
 
 function process_node(profile, node, result, relations)
     -- parse access and barrier tags
+    if node:get_value_by_key("highway") == 'path' then
+        result.barrier = true
+        return
+    end
     local access = find_access_tag(node, profile.access_tags_hierarchy)
     if access then
         if profile.access_tag_blacklist[access] and not profile.restricted_access_tag_list[access] then

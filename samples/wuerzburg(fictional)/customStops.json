@@ -1,0 +1,37 @@
+{
+  "type": "FeatureCollection",
+  "generator": "manuall",
+  "timestamp": "2020-11-22T14:39:02Z",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "customnode/1",
+        "bus": "yes",
+        "name": "Rotkreuzstraße"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9.926346, 49.800457
+        ]
+      },
+      "id": "customnode/1"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "customnode/2",
+        "bus": "yes",
+        "name": "Rotkreuzstraße"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          49.800398, 9.926603
+        ]
+      },
+      "id": "customnode/2"
+    }
+  ]
+}

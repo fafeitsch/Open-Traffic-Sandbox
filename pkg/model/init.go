@@ -40,9 +40,12 @@ func Init(directory string) (Model, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not parse start time \"%s\"", model.start)
 	}
-	stops, err := loadStops(filepath.Join(directory, scenario.StopDefinition))
-	if err != nil {
-		return nil, fmt.Errorf("loading the Stops from the referenced file \"%s\" failed: %v", scenario.StopDefinition, err)
+	stops := make(map[StopId]Stop)
+	for _, stopFile := range scenario.StopDefinitions {
+		err := loadStops(filepath.Join(directory, stopFile), stops)
+		if err != nil {
+			return nil, fmt.Errorf("loading the Stops from the referenced file \"%s\" failed: %v", stopFile, err)
+		}
 	}
 	model.stops = stops
 	model.lines, err = loadLines(scenario, directory, stops)
@@ -56,16 +59,15 @@ func Init(directory string) (Model, error) {
 	return &model, err
 }
 
-func loadStops(path string) (map[StopId]Stop, error) {
+func loadStops(path string, stops map[StopId]Stop) error {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	collection, err := geojson.UnmarshalFeatureCollection(data)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	stops := make(map[StopId]Stop)
 	for _, feature := range collection.Features {
 		id := StopId(fmt.Sprintf("%v", feature.ID))
 		stop := Stop{id: id, WayPoint: WayPoint{IsRealStop: true, Latitude: feature.Geometry.Point[1], Longitude: feature.Geometry.Point[0]}}
@@ -74,13 +76,13 @@ func loadStops(path string) (map[StopId]Stop, error) {
 		}
 		stops[id] = stop
 	}
-	return stops, nil
+	return nil
 }
 
 type scenario struct {
-	Start          string
-	StopDefinition string `json:"stopDefinition"`
-	Lines          []struct {
+	Start           string
+	StopDefinitions []string `json:"stopDefinitions"`
+	Lines           []struct {
 		Name string
 		Id   string
 		File string

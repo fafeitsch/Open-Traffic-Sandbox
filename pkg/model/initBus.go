@@ -5,7 +5,8 @@ import "fmt"
 func loadBuses(scenario scenario, lines []Line) ([]Bus, error) {
 	lineMap := make(map[LineId]*Line)
 	for _, line := range lines {
-		lineMap[line.Id] = &line
+		ptr := line
+		lineMap[line.Id] = &ptr
 	}
 	result := make([]Bus, 0, len(scenario.Buses))
 	for _, scenBus := range scenario.Buses {
@@ -14,7 +15,7 @@ func loadBuses(scenario scenario, lines []Line) ([]Bus, error) {
 		for _, asmgt := range scenBus.Assignments {
 			assignment, err := initAssignments(asmgt.Start, asmgt.Line, asmgt.Coordinates, lineMap)
 			if err != nil {
-				return nil, fmt.Errorf("could not load bus \"%s\": %v", scenBus.Id, err)
+				return nil, fmt.Errorf("could not load bus \"%s\": %v", bus.Id, err)
 			}
 			assignments = append(assignments, *assignment)
 		}

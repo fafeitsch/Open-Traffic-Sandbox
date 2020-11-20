@@ -143,7 +143,7 @@ func NewTicker(start Time, frequency float64, warp float64) Ticker {
 	channel := make(chan Time)
 	go func() {
 		last := start
-		for _ = range originalTicker.C {
+		for range originalTicker.C {
 			channel <- last
 			last = last.Add(time.Duration(float64(interval) * warp))
 		}

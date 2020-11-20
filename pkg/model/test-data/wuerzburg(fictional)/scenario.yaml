@@ -1,5 +1,5 @@
 start: 6:15
-stopDefinition: stops.geojson
+stopDefinitions: [stops.geojson]
 lines:
   - name: Busbahnhof - Residenz - Sanderau
     id: "A-outbound"
