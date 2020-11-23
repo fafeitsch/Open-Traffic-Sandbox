@@ -49,7 +49,7 @@ type Coordinate interface {
 }
 
 // RouteService is a function capable of computing detailed waypoints between the provided waypoints.
-type RouteService func(Coordinate, Coordinate) ([]Coordinate, float64, error)
+type RouteService func(...Coordinate) ([]Coordinate, float64, error)
 
 // BusPosition describes the position of a certain bus at the current moment. BusPosition is meant
 // to be sent to subscribers, possible over network. Thus, we keep this struct small.
@@ -157,11 +157,11 @@ type StopId string
 // Stop represents a location where buses stop and let passengers enter and exit the bus.
 type Stop struct {
 	WayPoint
-	id StopId
+	Id StopId
 }
 
 func (s *Stop) String() string {
-	return fmt.Sprintf("%s(%s)", s.Name, s.id)
+	return fmt.Sprintf("%s(%s)", s.Name, s.Id)
 }
 
 // LineId is used to identify a Line.
@@ -169,10 +169,12 @@ type LineId string
 
 // Line represents a predefined path and departures times for buses.
 type Line struct {
-	Id         LineId
-	Name       string
-	Stops      []*Stop
-	departures map[StopId][]Time
+	Id              LineId
+	Name            string
+	Stops           []*Stop
+	departures      map[StopId][]Time
+	DefinitionIndex int
+	Color           string
 }
 
 func (l *Line) String() string {
@@ -184,7 +186,7 @@ func (l *Line) String() string {
 // If the line is not well defined (e.g. no Stops, no adequate departures) then the
 // behaviour of this method is not well defined. It will most likely panic.
 func (l *Line) TourTimes(start Time) []Time {
-	departures := l.departures[l.Stops[0].id]
+	departures := l.departures[l.Stops[0].Id]
 	index := 0
 	departure := departures[0]
 	for departure != start && index < len(departures)-1 {
@@ -200,7 +202,7 @@ func (l *Line) TourTimes(start Time) []Time {
 			result = append(result, 0)
 			continue
 		}
-		result = append(result, l.departures[stop.id][index])
+		result = append(result, l.departures[stop.Id][index])
 	}
 	return result
 }

@@ -1,2 +1,19 @@
-<map-view></map-view>
+<mat-sidenav-container>
+  <mat-sidenav mode="side" opened>
+    <mat-tab-group>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          Lines
+        </ng-template>
+        <div class="ml-3 mt-3">
+          <line-list></line-list>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <map-view></map-view>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
 

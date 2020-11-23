@@ -10,16 +10,18 @@ import (
 	"time"
 )
 
-func loadLines(scenario scenario, directory string, stops map[StopId]Stop) ([]Line, error) {
-	result := make([]Line, 0, len(scenario.Lines))
-	for _, line := range scenario.Lines {
+func loadLines(scenario scenario, directory string, stops map[StopId]Stop) (map[LineId]Line, error) {
+	result := make(map[LineId]Line)
+	for index, line := range scenario.Lines {
 		loadedLine, err := loadLineFromFile(filepath.Join(directory, line.File), stops)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse line \"%s\": %v", line.Id, err)
 		}
 		loadedLine.Id = LineId(line.Id)
 		loadedLine.Name = line.Name
-		result = append(result, *loadedLine)
+		loadedLine.Color = line.Color
+		loadedLine.DefinitionIndex = index
+		result[loadedLine.Id] = *loadedLine
 	}
 	return result, nil
 }
@@ -44,6 +46,9 @@ func loadLineFromFile(filePath string, stops map[StopId]Stop) (*Line, error) {
 		stop, ok := stops[stopId]
 		if !ok {
 			return nil, fmt.Errorf("could not find stop \"%s\"", stopId)
+		}
+		if stop.Name == "" {
+			stop.Name = data[0]
 		}
 		stopList = append(stopList, &stop)
 		departures, err := createDepartures(data)

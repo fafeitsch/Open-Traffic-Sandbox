@@ -6,7 +6,9 @@ import (
 	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/bus"
 	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/model"
 	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/osrmclient"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/rest"
 	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/server"
+	"github.com/gorilla/mux"
 	"github.com/urfave/cli/v2"
 	"log"
 	"net/http"
@@ -63,14 +65,17 @@ func runWithOptions(options *options) cli.ActionFunc {
 		logger.Println()
 		logger.Printf("Starting simulation.")
 
+		gps := osrmclient.NewRouteService(options.otrsServer)
 		clientContainer := server.NewClientContainer()
-		http.Handle("/sockets", clientContainer)
-		http.Handle("/", http.FileServer(http.Dir("webfrontend/dist/webfrontend")))
+		handler := mux.NewRouter()
+		handler.PathPrefix("/sockets").Handler(clientContainer)
+		handler.PathPrefix("/api/lines").Handler(rest.NewRouter(mdl, gps))
+		handler.PathPrefix("/").Handler(http.FileServer(http.Dir("webfrontend/dist/webfrontend")))
 
 		publisher := func(position model.BusPosition) {
 			clientContainer.BroadcastJson(position)
 		}
-		dispatcher := bus.NewDispatcher(mdl, publisher, osrmclient.NewRouteService(options.otrsServer))
+		dispatcher := bus.NewDispatcher(mdl, publisher, gps)
 		dispatcher.Frequency = options.frequency
 		dispatcher.Warp = options.warp
 		var wg sync.WaitGroup
@@ -79,7 +84,7 @@ func runWithOptions(options *options) cli.ActionFunc {
 			defer wg.Done()
 			dispatcher.Run(mdl.Start())
 		}()
-		srv := http.Server{Addr: options.bindAddress}
+		srv := http.Server{Addr: options.bindAddress, Handler: handler}
 		go func() {
 			logger.Printf("Listening on %s … ", options.bindAddress)
 			err := srv.ListenAndServe()

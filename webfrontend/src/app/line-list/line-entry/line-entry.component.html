@@ -1,0 +1,6 @@
+<div class="item">
+  <span class="color-indicator mr-3" [style.background-color]="line.color"></span>
+  <span class="visibility-toggle mr-3">
+  <span (click)="toggleVisibility()"><mat-icon>{{visible ? "visibility" : "visibility_off"}}</mat-icon></span></span>
+  <span>{{line.name}}</span>
+</div>

@@ -1,0 +1,15 @@
+.visibility-toggle {
+  cursor: pointer;
+}
+
+.color-indicator {
+  min-width: 20px;
+  min-height: 20px;
+  border-radius: 5px;
+  display: inline-block;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+}

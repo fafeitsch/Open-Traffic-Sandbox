@@ -36,11 +36,12 @@ func NewRouteService(connection string) model.RouteService {
 // to connect the given waypoints the the defined order (no, this is not a TSP here :)).
 // When the request is responded successfully, the shortest path is returned as well as the length
 // of the shortest path. Otherwise, a non-nil error is returned.
-func (r *RouteService) QueryRoute(from model.Coordinate, to model.Coordinate) ([]model.Coordinate, float64, error) {
+func (r *RouteService) QueryRoute(coordinates ...model.Coordinate) ([]model.Coordinate, float64, error) {
 	pointSet := geo.NewPointSet()
-	point := geo.NewPoint(from.Lon(), from.Lat())
-	pointSet.InsertAt(0, point)
-	pointSet.InsertAt(1, geo.NewPoint(to.Lon(), to.Lat()))
+	for i, m := range coordinates {
+		point := geo.NewPoint(m.Lon(), m.Lat())
+		pointSet.InsertAt(i, point)
+	}
 	overview := "full"
 	routeRequest := &gosrm.RouteRequest{
 		Coordinates: *pointSet,

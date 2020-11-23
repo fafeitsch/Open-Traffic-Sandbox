@@ -1,0 +1,6 @@
+<div class="mt-5 ml-3">
+  <line-entry *ngFor="let line of lines$ | async" class="line-entry mt-2" [line]="line"
+              (makeVisible)="activateLine($event)"
+              (makeInvisible)="deactivateLine($event)">
+  </line-entry>
+</div>

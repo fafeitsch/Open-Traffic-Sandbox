@@ -2,18 +2,13 @@ package model
 
 import "fmt"
 
-func loadBuses(scenario scenario, lines []Line) ([]Bus, error) {
-	lineMap := make(map[LineId]*Line)
-	for _, line := range lines {
-		ptr := line
-		lineMap[line.Id] = &ptr
-	}
+func loadBuses(scenario scenario, lines map[LineId]Line) ([]Bus, error) {
 	result := make([]Bus, 0, len(scenario.Buses))
 	for _, scenBus := range scenario.Buses {
 		bus := Bus{Id: BusId(scenBus.Id)}
 		assignments := make([]Assignment, 0, len(scenBus.Assignments))
 		for _, asmgt := range scenBus.Assignments {
-			assignment, err := initAssignments(asmgt.Start, asmgt.Line, asmgt.Coordinates, lineMap)
+			assignment, err := initAssignments(asmgt.Start, asmgt.Line, asmgt.Coordinates, lines)
 			if err != nil {
 				return nil, fmt.Errorf("could not load bus \"%s\": %v", bus.Id, err)
 			}
@@ -25,7 +20,7 @@ func loadBuses(scenario scenario, lines []Line) ([]Bus, error) {
 	return result, nil
 }
 
-func initAssignments(rawStart string, line string, coordinates [][2]float64, lineMap map[LineId]*Line) (*Assignment, error) {
+func initAssignments(rawStart string, line string, coordinates [][2]float64, lineMap map[LineId]Line) (*Assignment, error) {
 	start, err := ParseTime(rawStart)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse time \"%s\" of bus: %v", rawStart, err)
@@ -37,13 +32,13 @@ func initAssignments(rawStart string, line string, coordinates [][2]float64, lin
 	}
 }
 
-func createLineAssignment(lineMap map[LineId]*Line, rawLine string, start Time) (*Assignment, error) {
+func createLineAssignment(lineMap map[LineId]Line, rawLine string, start Time) (*Assignment, error) {
 	assignment := Assignment{Departure: start}
 	line, ok := lineMap[LineId(rawLine)]
 	if !ok {
-		return nil, fmt.Errorf("line \"%s\" not found", line)
+		return nil, fmt.Errorf("line \"%s\" not found", line.Id)
 	}
-	assignment.Line = line
+	assignment.Line = &line
 	assignment.Name = line.Name
 	waypoints := make([]WayPoint, 0, len(line.Stops))
 	departures := line.TourTimes(assignment.Departure)

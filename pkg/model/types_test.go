@@ -30,7 +30,7 @@ func ExampleParseTime() {
 }
 
 func ExampleLine_TourTimes() {
-	stops := []*Stop{{id: "stopA", WayPoint: WayPoint{IsRealStop: true}}, {id: "stopB", WayPoint: WayPoint{IsRealStop: true}}, {id: "stopC", WayPoint: WayPoint{IsRealStop: true}}, {id: "stopD", WayPoint: WayPoint{IsRealStop: true}}}
+	stops := []*Stop{{Id: "stopA", WayPoint: WayPoint{IsRealStop: true}}, {Id: "stopB", WayPoint: WayPoint{IsRealStop: true}}, {Id: "stopC", WayPoint: WayPoint{IsRealStop: true}}, {Id: "stopD", WayPoint: WayPoint{IsRealStop: true}}}
 	baseTime, _ := ParseTime("16:35")
 	departures := map[StopId][]Time{
 		"stopA": {baseTime, baseTime.Add(7 * time.Minute), baseTime.Add(14 * time.Minute)},

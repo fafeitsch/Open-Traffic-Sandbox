@@ -4,21 +4,27 @@ lines:
   - name: Busbahnhof - Residenz - Sanderau
     id: A-outbound
     file: lineA.csv
+    color: '#801818'
   - name: Sanderau - Residenz - Busbahnhof
     id: A-inbound
+    color: '#801818'
     file: lineA_rev.csv
   - name: Busbahnhof - Zellerau
     id: B-outbound
     file: lineB.csv
+    color: '#6B8E23'
   - name: Zellerau - Busbahnhof
     id: B-inbound
     file: lineB_rev.csv
+    color: '#6B8E23'
   - name: Hauptbahnhof - Frauenland - Sanderau
     id: C-outbound
+    color: '#007FFF'
     file: lineC.csv
   - name: Hubland - Sanderring - Zellerau
     id: D-westbound
     file: lineD.csv
+    color: '#8B00FF'
 buses:
   - id: V1
     assignments:

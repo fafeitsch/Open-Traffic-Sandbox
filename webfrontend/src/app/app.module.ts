@@ -3,7 +3,11 @@ import {NgModule} from '@angular/core';
 
 import {AppComponent} from './app.component';
 import {MapViewModule} from './map-view/map-view.module';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {LineListModule} from './line-list/line-list.module';
+import {MatSidenavModule} from '@angular/material/sidenav';
+import {MatTabsModule} from '@angular/material/tabs';
+import {MatIconModule} from '@angular/material/icon';
 
 @NgModule({
   declarations: [
@@ -12,7 +16,11 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
   imports: [
     BrowserModule,
     MapViewModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    LineListModule,
+    MatSidenavModule,
+    MatTabsModule,
+    MatIconModule
   ],
   providers: [],
   bootstrap: [AppComponent]

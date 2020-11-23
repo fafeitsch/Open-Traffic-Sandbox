@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {Observable, of} from 'rxjs';
 import {delay, filter, map, retryWhen, switchMap} from 'rxjs/operators';
-import {environment} from '../environments/environment';
+import {environment} from '../../environments/environment';
 import {WebSocketSubject} from 'rxjs/internal-compatibility';
 import {webSocket} from 'rxjs/webSocket';
 

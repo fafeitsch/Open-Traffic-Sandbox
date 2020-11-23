@@ -1,20 +1,54 @@
 start: 6:15
-stopDefinitions: [stops.geojson]
+stopDefinitions: [stops.geojson,customStops.json]
 lines:
   - name: Busbahnhof - Residenz - Sanderau
-    id: "A-outbound"
-    file: "lineA.csv"
+    id: A-outbound
+    file: lineA.csv
+    color: '#801818'
+  - name: Sanderau - Residenz - Busbahnhof
+    id: A-inbound
+    color: '#801818'
+    file: lineA_rev.csv
+  - name: Busbahnhof - Zellerau
+    id: B-outbound
+    file: lineB.csv
+    color: '#6B8E23'
+  - name: Zellerau - Busbahnhof
+    id: B-inbound
+    file: lineB_rev.csv
+    color: '#6B8E23'
+  - name: Hauptbahnhof - Frauenland - Sanderau
+    id: C-outbound
+    color: '#007FFF'
+    file: lineC.csv
+  - name: Hubland - Sanderring - Zellerau
+    id: D-westbound
+    file: lineD.csv
+    color: '#8B00FF'
 buses:
-  - id: "V1"
-    initialLocation: [ 49.80083,9.92863 ]
+  - id: V1
     assignments:
       - start: 6:15
         line: A-outbound
-  - id: "V2"
+  - id: V2
     assignments:
       - start: 6:15
         coordinates: [[ 49.7333,9.9664 ], [49.8012835, 9.9340999]]
       - start: 6:35
         line: A-outbound
+  - id: V3
+    assignments:
+      - start: 6:20
+        line: B-outbound
+      - start: 6:32
+        line: B-inbound
+  - id: V4
+    assignments:
+      - start: 6:16
+        line: C-outbound
+  - id: V5
+    assignments:
+      - start: 6:15
+        line: D-westbound
 
 

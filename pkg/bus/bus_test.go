@@ -40,8 +40,8 @@ func TestDispatcher_Start(t *testing.T) {
 	publisher := func(position model.BusPosition) {
 		positionReceiver <- position
 	}
-	routeService := func(start model.Coordinate, target model.Coordinate) ([]model.Coordinate, float64, error) {
-		return []model.Coordinate{start, target}, 0, nil
+	routeService := func(coordinates ...model.Coordinate) ([]model.Coordinate, float64, error) {
+		return coordinates, 0, nil
 	}
 	dispatcher := NewDispatcher(&mockModel{buses: []model.Bus{bus1}}, publisher, routeService)
 	dispatcher.Frequency = 1000

@@ -16,10 +16,17 @@ type BusModel interface {
 	Buses() []Bus
 }
 
+// LineModel is model designed for line management
+type LineModel interface {
+	Lines() []Line
+	Line(LineId) (Line, bool)
+}
+
 // Model represent the static data of a scenario. The model does not change over time, i.e. bus positions etc. are
 // not stored in the model.
 type Model interface {
 	BusModel
+	LineModel
 	Start() Time
 }
 
@@ -70,7 +77,7 @@ func loadStops(path string, stops map[StopId]Stop) error {
 	}
 	for _, feature := range collection.Features {
 		id := StopId(fmt.Sprintf("%v", feature.ID))
-		stop := Stop{id: id, WayPoint: WayPoint{IsRealStop: true, Latitude: feature.Geometry.Point[1], Longitude: feature.Geometry.Point[0]}}
+		stop := Stop{Id: id, WayPoint: WayPoint{IsRealStop: true, Latitude: feature.Geometry.Point[1], Longitude: feature.Geometry.Point[0]}}
 		if name, ok := feature.Properties["name"]; ok {
 			stop.Name = fmt.Sprintf("%v", name)
 		}
@@ -83,9 +90,10 @@ type scenario struct {
 	Start           string
 	StopDefinitions []string `json:"stopDefinitions"`
 	Lines           []struct {
-		Name string
-		Id   string
-		File string
+		Name  string
+		Color string
+		Id    string
+		File  string
 	}
 	Buses []struct {
 		Id          string
@@ -100,12 +108,27 @@ type scenario struct {
 type model struct {
 	start Time
 	stops map[StopId]Stop
-	lines []Line
+	lines map[LineId]Line
 	buses []Bus
 }
 
+// Buses returns a slice of all busses in this model. This slice should not be changed.
 func (m *model) Buses() []Bus {
 	return m.buses
+}
+
+// Lines returns a slice of all lines in this model.
+func (m *model) Lines() []Line {
+	result := make([]Line, 0, len(m.lines))
+	for _, line := range m.lines {
+		result = append(result, line)
+	}
+	return result
+}
+
+func (m *model) Line(s LineId) (Line, bool) {
+	line, ok := m.lines[s]
+	return line, ok
 }
 
 func (m *model) String() string {
