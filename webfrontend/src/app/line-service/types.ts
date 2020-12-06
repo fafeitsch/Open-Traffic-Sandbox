@@ -1,5 +1,5 @@
 export interface Line {
-  key: string;
+  id: string;
   name: string;
   color: string;
 }

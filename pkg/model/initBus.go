@@ -2,8 +2,8 @@ package model
 
 import "fmt"
 
-func loadBuses(scenario scenario, lines map[LineId]Line) ([]Bus, error) {
-	result := make([]Bus, 0, len(scenario.Buses))
+func loadBuses(scenario scenario, lines map[LineId]Line) (map[BusId]Bus, error) {
+	result := make(map[BusId]Bus)
 	for _, scenBus := range scenario.Buses {
 		bus := Bus{Id: BusId(scenBus.Id)}
 		assignments := make([]Assignment, 0, len(scenBus.Assignments))
@@ -15,7 +15,7 @@ func loadBuses(scenario scenario, lines map[LineId]Line) ([]Bus, error) {
 			assignments = append(assignments, *assignment)
 		}
 		bus.Assignments = assignments
-		result = append(result, bus)
+		result[bus.Id] = bus
 	}
 	return result, nil
 }
@@ -66,6 +66,7 @@ func createWaypointAssignment(coordinates [][2]float64, start Time) *Assignment 
 		}
 		waypoints = append(waypoints, waypoint)
 	}
+	assignment.Name = "custom waypoint assignment"
 	assignment.WayPoints = waypoints
 	return &assignment
 }

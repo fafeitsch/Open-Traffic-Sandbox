@@ -25,7 +25,7 @@ export class LineListStore extends ComponentStore<LineTableState> {
 
   readonly viewLine$ = super.effect((line$: Observable<Line>) =>
     line$.pipe(
-      switchMap(line => this.service.getLineRoute(line.key)),
+      switchMap(line => this.service.getLineRoute(line.id)),
       tap<LineRoute>(route => this.lineViewService.activateLine(route))
     )
   );

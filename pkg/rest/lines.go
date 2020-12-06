@@ -16,7 +16,7 @@ type restStop struct {
 }
 
 type restLine struct {
-	Key   model.LineId `json:"key"`
+	Id    model.LineId `json:"id"`
 	Name  string       `json:"name"`
 	Color string       `json:"color"`
 }
@@ -29,7 +29,7 @@ func (a *api) getLines(w http.ResponseWriter, r *http.Request) {
 	result := make([]restLine, 0, len(lines))
 	for _, line := range lines {
 		result = append(result, restLine{
-			Key:   line.Id,
+			Id:    line.Id,
 			Name:  line.Name,
 			Color: line.Color,
 		})
@@ -44,14 +44,19 @@ func (a *api) getLine(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	result := restLine{
-		Key:   line.Id,
-		Name:  line.Name,
-		Color: line.Color,
-	}
+	result := mapToRestLine(line)
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	_ = enc.Encode(result)
+}
+
+func mapToRestLine(line model.Line) restLine {
+	result := restLine{
+		Id:    line.Id,
+		Name:  line.Name,
+		Color: line.Color,
+	}
+	return result
 }
 
 func (a *api) getRoute(w http.ResponseWriter, r *http.Request) {
@@ -63,18 +68,7 @@ func (a *api) getRoute(w http.ResponseWriter, r *http.Request) {
 	for _, stop := range line.Stops {
 		coords = append(coords, stop)
 	}
-	route, _, err := a.gps(coords...)
-	if err != nil {
-		errorResponse(w, http.StatusInternalServerError, "could not query routes: %v", err)
-		return
-	}
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	result := make([][2]float64, 0, len(route))
-	for _, coordinate := range route {
-		result = append(result, [2]float64{coordinate.Lat(), coordinate.Lon()})
-	}
-	_ = enc.Encode(result)
+	a.queryAndWriteRouteToWriter(w, coords)
 }
 
 func (a *api) findLine(w http.ResponseWriter, r *http.Request) (model.Line, bool) {

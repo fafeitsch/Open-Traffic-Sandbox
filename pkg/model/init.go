@@ -14,6 +14,7 @@ import (
 // BusModel is a model designed for all bus stuff.
 type BusModel interface {
 	Buses() []Bus
+	Bus(BusId) (*Bus, bool)
 }
 
 // LineModel is model designed for line management
@@ -109,12 +110,22 @@ type model struct {
 	start Time
 	stops map[StopId]Stop
 	lines map[LineId]Line
-	buses []Bus
+	buses map[BusId]Bus
 }
 
-// Buses returns a slice of all busses in this model. This slice should not be changed.
+// Buses returns a slice of all busses in this model.
 func (m *model) Buses() []Bus {
-	return m.buses
+	result := make([]Bus, 0, len(m.buses))
+	for _, bus := range m.buses {
+		result = append(result, bus)
+	}
+	return result
+}
+
+// Bus returns a pointer to the bus with the given id. If the bus does not exist, then the second return variable is false.
+func (m *model) Bus(id BusId) (*Bus, bool) {
+	bus, ok := m.buses[id]
+	return &bus, ok
 }
 
 // Lines returns a slice of all lines in this model.

@@ -15,6 +15,10 @@ func (m mockModel) Buses() []model.Bus {
 	return m.buses
 }
 
+func (m mockModel) Bus(id model.BusId) (*model.Bus, bool) {
+	panic("not yet implemented")
+}
+
 func TestDispatcher_Start(t *testing.T) {
 	// This test is somewhat artificial. We are modelling one bus who has a slice of way points.
 	// As route function, we simply return the start and the end coordinate, meaning that the route between to coordinates

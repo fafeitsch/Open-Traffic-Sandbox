@@ -143,6 +143,11 @@
   "schematics": {
     "@schematics/angular:component": {
       "style": "scss"
+    },
+    "@schematics/angular": {
+      "component": {
+        "changeDetection": "OnPush"
+      }
     }
   }
 }

@@ -11,8 +11,8 @@ func TestInit(t *testing.T) {
 	require.NoError(t, err, "no error expected")
 	require.Equal(t, 5, len(mdl.Buses()), "number of buses in the scenario.")
 
-	bus2 := mdl.Buses()[1]
-	assert.Equal(t, BusId("V2"), bus2.Id, "Key of the first bus")
+	bus2, _ := mdl.Bus(BusId("V2"))
+	assert.Equal(t, BusId("V2"), bus2.Id, "Id of the first bus")
 	assert.Equal(t, "", bus2.Name, "Name of the first bus")
 	require.Equal(t, 2, len(bus2.Assignments), "number of assignments of the first bus")
 	assignment := bus2.Assignments[1]
@@ -26,7 +26,7 @@ func TestInit(t *testing.T) {
 	assert.Equal(t, 39, len(line.departures[line.Stops[8].Id]), "number of tours in the line")
 
 	assignment = bus2.Assignments[0]
-	assert.Equal(t, "", assignment.Name, "name of assignment")
+	assert.Equal(t, "custom waypoint assignment", assignment.Name, "name of assignment")
 	assert.Equal(t, 2, len(assignment.WayPoints), "number of waypoints")
 	assert.Equal(t, WayPoint{Departure: 0, IsRealStop: false, Name: "custom waypoint", Latitude: 49.8012835, Longitude: 9.9340999}, assignment.WayPoints[1], "second waypoint")
 }

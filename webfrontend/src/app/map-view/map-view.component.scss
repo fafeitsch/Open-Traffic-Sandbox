@@ -8,6 +8,17 @@
   flex: 1;
 }
 
+.center-flex {
+  display: flex;
+  align-items: center;
+}
+
+.line-marker {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+}
+
 .map-marker {
   text-align: center;
   font-weight: bold;

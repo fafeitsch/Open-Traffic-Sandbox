@@ -3,6 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/bus"
 	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/model"
 	"github.com/gorilla/mux"
 	"log"
@@ -10,8 +11,10 @@ import (
 )
 
 type api struct {
-	lineModel model.LineModel
-	gps       model.RouteService
+	lineModel  model.LineModel
+	busModel   model.BusModel
+	dispatcher *bus.Dispatcher
+	gps        model.RouteService
 }
 
 func headers(next http.HandlerFunc) http.Handler {
@@ -37,13 +40,23 @@ func headers(next http.HandlerFunc) http.Handler {
 
 const apiPrefix = "/api"
 
+// RouterConfig contains the necessary models and accessors for running the rest api.
+type RouterConfig struct {
+	LineModel  model.LineModel
+	BusModel   model.BusModel
+	Dispatcher *bus.Dispatcher
+	Gps        model.RouteService
+}
+
 // NewRouter creates an http router for the REST Api.
-func NewRouter(lineModel model.LineModel, gps model.RouteService) http.Handler {
-	api := api{lineModel: lineModel, gps: gps}
+func NewRouter(config RouterConfig) http.Handler {
+	api := api{lineModel: config.LineModel, busModel: config.BusModel, dispatcher: config.Dispatcher, gps: config.Gps}
 	router := mux.NewRouter()
 	router.Handle(apiPrefix+"/lines", headers(api.getLines))
 	router.Handle(apiPrefix+"/lines/{key}", headers(api.getLine))
 	router.Handle(apiPrefix+"/lines/{key}/route", headers(api.getRoute))
+	router.Handle(apiPrefix+"/buses/{key}/info", headers(api.getBusInfo))
+	router.Handle(apiPrefix+"/buses/{key}/route", headers(api.getRouteOfBus))
 	return router
 }
 

@@ -65,19 +65,26 @@ func runWithOptions(options *options) cli.ActionFunc {
 		logger.Println()
 		logger.Printf("Starting simulation.")
 
-		gps := osrmclient.NewRouteService(options.otrsServer)
 		clientContainer := server.NewClientContainer()
-		handler := mux.NewRouter()
-		handler.PathPrefix("/sockets").Handler(clientContainer)
-		handler.PathPrefix("/api/lines").Handler(rest.NewRouter(mdl, gps))
-		handler.PathPrefix("/").Handler(http.FileServer(http.Dir("webfrontend/dist/webfrontend")))
-
+		gps := osrmclient.NewRouteService(options.otrsServer)
 		publisher := func(position model.BusPosition) {
 			clientContainer.BroadcastJson(position)
 		}
 		dispatcher := bus.NewDispatcher(mdl, publisher, gps)
 		dispatcher.Frequency = options.frequency
 		dispatcher.Warp = options.warp
+
+		handler := mux.NewRouter()
+		handler.PathPrefix("/sockets").Handler(clientContainer)
+		routerConfig := rest.RouterConfig{
+			LineModel:  mdl,
+			BusModel:   mdl,
+			Dispatcher: dispatcher,
+			Gps:        gps,
+		}
+		handler.PathPrefix("/api").Handler(rest.NewRouter(routerConfig))
+		handler.PathPrefix("/").Handler(http.FileServer(http.Dir("webfrontend/dist/webfrontend")))
+
 		var wg sync.WaitGroup
 		wg.Add(1)
 		go func() {

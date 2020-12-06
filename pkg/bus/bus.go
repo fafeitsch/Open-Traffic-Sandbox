@@ -4,23 +4,39 @@ import (
 	"github.com/fafeitsch/Open-Traffic-Sandbox/pkg/model"
 	"log"
 	"math"
+	"sync"
 )
 
 type bus struct {
-	id             model.BusId
-	dispatcher     *Dispatcher
-	assignments    []model.Assignment
-	gps            model.RouteService
-	heartBeatTimer model.Ticker
-	position       model.Coordinate
-	speed          int
+	mutex             sync.Mutex
+	id                model.BusId
+	dispatcher        *Dispatcher
+	assignments       []model.Assignment
+	currentAssignment int
+	gps               model.RouteService
+	heartBeatTimer    model.Ticker
+	position          model.Coordinate
+	speed             int
 }
 
 func (b *bus) start(timer model.Ticker) {
 	b.heartBeatTimer = timer
-	for _, assignment := range b.assignments {
+	for index, assignment := range b.assignments {
+		b.setAssignmentIndex(index)
 		b.handleAssignment(assignment)
 	}
+}
+
+func (b *bus) setAssignmentIndex(index int) {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+	b.currentAssignment = index
+}
+
+func (b *bus) getCurrentAssignment() *model.Assignment {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+	return &b.assignments[b.currentAssignment]
 }
 
 func (b *bus) handleAssignment(a model.Assignment) {
@@ -52,6 +68,8 @@ func (b *bus) handleAssignment(a model.Assignment) {
 }
 
 func (b *bus) drive(route []model.Coordinate, distanceToDrive float64) []model.Coordinate {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 	defer b.dispatcher.positionStatement(b, b.position)
 	if b.position == route[0] {
 		route = route[1:]

@@ -1,12 +1,13 @@
-import {Component, OnInit} from '@angular/core';
-import {LineListStore} from './line-list-store.service';
+import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
 import {Line} from '../line-service/types';
+import {LineListStore} from './line-list-store.service';
 
 @Component({
   selector: 'line-list',
   templateUrl: './line-list.component.html',
   styleUrls: ['./line-list.component.scss'],
-  providers: [LineListStore]
+  providers: [LineListStore],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LineListComponent implements OnInit {
 
