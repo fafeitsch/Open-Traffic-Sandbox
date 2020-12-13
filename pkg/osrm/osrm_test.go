@@ -1,4 +1,4 @@
-package osrmclient
+package osrm
 
 import (
 	"fmt"

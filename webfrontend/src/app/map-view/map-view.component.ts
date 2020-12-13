@@ -7,6 +7,7 @@ import {map, takeUntil} from 'rxjs/operators';
 import {BusInfo} from '../bus-service/types';
 import {MapViewStore} from './map-view.store';
 import {VehicleLocationService} from './vehicle-location.service';
+import {environment} from '../../environments/environment';
 
 @Component({
   selector: 'map-view',
@@ -32,7 +33,7 @@ export class MapViewComponent implements OnInit, OnDestroy {
   ngOnInit() {
     const leafletMap = L.map('map').setView([49.80075, 9.93543], 16);
 
-    L.tileLayer('http://localhost:8080/tile/{z}/{x}/{y}.png', {
+    L.tileLayer(environment.apiUrl + 'tile/{z}/{x}/{y}', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(leafletMap);
 
