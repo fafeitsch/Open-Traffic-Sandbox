@@ -40,15 +40,19 @@ func createLineAssignment(lineMap map[LineId]Line, rawLine string, start Time) (
 	}
 	assignment.Line = &line
 	assignment.Name = line.Name
-	waypoints := make([]WayPoint, 0, len(line.Stops))
+	waypoints := make([]WayPoint, 0, len(line.waypoints))
 	departures := line.TourTimes(assignment.Departure)
 	if departures == nil {
 		return nil, fmt.Errorf("line assignment \"%s\" with start time \"%s\" has no equivalent in time table", line.Id, start)
 	}
 	index := 0
-	for _, wp := range line.Stops {
-		waypoints = append(waypoints, WayPoint{Departure: departures[index], IsRealStop: wp.IsRealStop, Name: wp.Name, Latitude: wp.Latitude, Longitude: wp.Longitude})
-		index = index + 1
+	for _, wp := range line.waypoints {
+		point := WayPoint{Id: wp.Id, Name: wp.Name, Latitude: wp.Latitude, Longitude: wp.Longitude}
+		if wp.Id != nil {
+			point.Departure = departures[index]
+			index = index + 1
+		}
+		waypoints = append(waypoints, point)
 	}
 	assignment.WayPoints = waypoints
 	return &assignment, nil
@@ -59,10 +63,9 @@ func createWaypointAssignment(coordinates [][2]float64, start Time) *Assignment 
 	waypoints := make([]WayPoint, 0, len(coordinates))
 	for _, coordinate := range coordinates {
 		waypoint := WayPoint{
-			IsRealStop: false,
-			Name:       "custom waypoint",
-			Latitude:   coordinate[0],
-			Longitude:  coordinate[1],
+			Name:      "custom waypoint",
+			Latitude:  coordinate[0],
+			Longitude: coordinate[1],
 		}
 		waypoints = append(waypoints, waypoint)
 	}

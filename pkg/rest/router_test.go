@@ -20,7 +20,7 @@ func gps(coordinate ...model.Coordinate) ([]model.Coordinate, float64, error) {
 }
 
 func TestNewRouter(t *testing.T) {
-	mdl, _ := model.Init("../model/test-data/wuerzburg(fictional)")
+	mdl, _ := model.Init("../model/testdata/wuerzburg(fictional)")
 	config := RouterConfig{
 		LineModel:  mdl,
 		BusModel:   mdl,

@@ -17,6 +17,7 @@ type bus struct {
 	heartBeatTimer    model.Ticker
 	position          model.Coordinate
 	speed             int
+	currentStop       *model.WayPoint
 }
 
 func (b *bus) start(timer model.Ticker) {
@@ -64,13 +65,25 @@ func (b *bus) handleAssignment(a model.Assignment) {
 			route = b.drive(route, driven)
 			last = current
 		}
+		if wayPoint.Id != nil {
+			b.currentStop = &wayPoint
+		}
+		for last.Before(wayPoint.Departure) {
+			b.dispatcher.publish(model.BusPosition{Stop: b.currentStop, BusId: b.id, Location: [2]float64{b.position.Lat(), b.position.Lon()}})
+			current, ok := <-b.heartBeatTimer.HeartBeat
+			if !ok {
+				return
+			}
+			last = current
+		}
+		b.currentStop = nil
 	}
 }
 
 func (b *bus) drive(route []model.Coordinate, distanceToDrive float64) []model.Coordinate {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
-	defer b.dispatcher.positionStatement(b, b.position)
+	defer b.dispatcher.publish(model.BusPosition{BusId: b.id, Location: [2]float64{b.position.Lat(), b.position.Lon()}})
 	if b.position == route[0] {
 		route = route[1:]
 	}

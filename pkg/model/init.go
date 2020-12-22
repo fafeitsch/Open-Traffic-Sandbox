@@ -48,11 +48,11 @@ func Init(directory string) (Model, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not parse start time \"%s\"", model.start)
 	}
-	stops := make(map[StopId]Stop)
+	stops := make(map[StopId]WayPoint)
 	for _, stopFile := range scenario.StopDefinitions {
 		err := loadStops(filepath.Join(directory, stopFile), stops)
 		if err != nil {
-			return nil, fmt.Errorf("loading the Stops from the referenced file \"%s\" failed: %v", stopFile, err)
+			return nil, fmt.Errorf("loading the waypoints from the referenced file \"%s\" failed: %v", stopFile, err)
 		}
 	}
 	model.stops = stops
@@ -67,7 +67,7 @@ func Init(directory string) (Model, error) {
 	return &model, err
 }
 
-func loadStops(path string, stops map[StopId]Stop) error {
+func loadStops(path string, stops map[StopId]WayPoint) error {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
@@ -78,7 +78,7 @@ func loadStops(path string, stops map[StopId]Stop) error {
 	}
 	for _, feature := range collection.Features {
 		id := StopId(fmt.Sprintf("%v", feature.ID))
-		stop := Stop{Id: id, WayPoint: WayPoint{IsRealStop: true, Latitude: feature.Geometry.Point[1], Longitude: feature.Geometry.Point[0]}}
+		stop := WayPoint{Id: &id, Latitude: feature.Geometry.Point[1], Longitude: feature.Geometry.Point[0]}
 		if name, ok := feature.Properties["name"]; ok {
 			stop.Name = fmt.Sprintf("%v", name)
 		}
@@ -108,7 +108,7 @@ type scenario struct {
 
 type model struct {
 	start Time
-	stops map[StopId]Stop
+	stops map[StopId]WayPoint
 	lines map[LineId]Line
 	buses map[BusId]Bus
 }
@@ -144,7 +144,7 @@ func (m *model) Line(s LineId) (Line, bool) {
 
 func (m *model) String() string {
 	result := fmt.Sprintf("Run Time: %v\n", m.start)
-	result = result + fmt.Sprintf("Stops: %d\n", len(m.stops))
+	result = result + fmt.Sprintf("waypoints: %d\n", len(m.stops))
 	result = result + fmt.Sprintf("Lines: %d\n", len(m.lines))
 	result = result + fmt.Sprintf("Buses: %d", len(m.Buses()))
 	return result

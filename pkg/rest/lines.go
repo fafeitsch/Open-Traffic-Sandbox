@@ -64,8 +64,8 @@ func (a *api) getRoute(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	coords := make([]model.Coordinate, 0, len(line.Stops))
-	for _, stop := range line.Stops {
+	coords := make([]model.Coordinate, 0, len(line.WayPoints()))
+	for _, stop := range line.WayPoints() {
 		coords = append(coords, stop)
 	}
 	a.queryAndWriteRouteToWriter(w, coords)

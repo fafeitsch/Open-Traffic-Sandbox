@@ -3,6 +3,7 @@ module github.com/fafeitsch/Open-Traffic-Sandbox
 go 1.14
 
 require (
+	github.com/fafeitsch/simple-timetable-routing v0.2.0
 	github.com/goccy/go-yaml v1.8.2
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2

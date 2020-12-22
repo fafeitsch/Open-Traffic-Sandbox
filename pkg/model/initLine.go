@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func loadLines(scenario scenario, directory string, stops map[StopId]Stop) (map[LineId]Line, error) {
+func loadLines(scenario scenario, directory string, stops map[StopId]WayPoint) (map[LineId]Line, error) {
 	result := make(map[LineId]Line)
 	for index, line := range scenario.Lines {
 		loadedLine, err := loadLineFromFile(filepath.Join(directory, line.File), stops)
@@ -26,7 +26,7 @@ func loadLines(scenario scenario, directory string, stops map[StopId]Stop) (map[
 	return result, nil
 }
 
-func loadLineFromFile(filePath string, stops map[StopId]Stop) (*Line, error) {
+func loadLineFromFile(filePath string, stops map[StopId]WayPoint) (*Line, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("loading line file failed: %v", err)
@@ -35,7 +35,7 @@ func loadLineFromFile(filePath string, stops map[StopId]Stop) (*Line, error) {
 	reader := csv.NewReader(file)
 	reader.ReuseRecord = true
 	reader.LazyQuotes = true
-	stopList := make([]*Stop, 0, 0)
+	stopList := make([]*WayPoint, 0, 0)
 	departureMap := make(map[StopId][]Time)
 	for data, err := reader.Read(); err == nil; data, err = reader.Read() {
 		if ok, wayPointOnly := isEntryWaypointOnly(data); ok {
@@ -57,7 +57,7 @@ func loadLineFromFile(filePath string, stops map[StopId]Stop) (*Line, error) {
 		}
 		departureMap[stopId] = departures
 	}
-	return &Line{Stops: stopList, departures: departureMap}, nil
+	return &Line{waypoints: stopList, departures: departureMap}, nil
 }
 
 func createDepartures(csvLine []string) ([]Time, error) {
@@ -98,7 +98,7 @@ func createDepartures(csvLine []string) ([]Time, error) {
 	return result, nil
 }
 
-func isEntryWaypointOnly(csv []string) (bool, *Stop) {
+func isEntryWaypointOnly(csv []string) (bool, *WayPoint) {
 	allExcept2ndColEmpty := csv[0] == ""
 	for _, entry := range csv[2:] {
 		allExcept2ndColEmpty = allExcept2ndColEmpty && entry == ""
@@ -113,5 +113,5 @@ func isEntryWaypointOnly(csv []string) (bool, *Stop) {
 	}
 	latitude, _ := strconv.ParseFloat(subMatch[1], 64)
 	longitude, _ := strconv.ParseFloat(subMatch[2], 64)
-	return true, &Stop{WayPoint: WayPoint{Latitude: latitude, Longitude: longitude, Name: "custom waypoint"}}
+	return true, &WayPoint{Latitude: latitude, Longitude: longitude, Name: "custom waypoint"}
 }

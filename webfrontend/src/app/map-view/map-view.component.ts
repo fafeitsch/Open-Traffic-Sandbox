@@ -33,14 +33,14 @@ export class MapViewComponent implements OnInit, OnDestroy {
   ngOnInit() {
     const leafletMap = L.map('map').setView([49.80075, 9.93543], 16);
 
-    L.tileLayer(environment.apiUrl + 'tile/{z}/{x}/{y}', {
+    L.tileLayer(environment.apiUrl + '/tile/{z}/{x}/{y}', {
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(leafletMap);
 
     const markers: { [key: string]: any } = {};
 
     this.vehicleLocationService.connect().pipe(
-      takeUntil(this.destroy$)
+      takeUntil(this.destroy$),
     ).subscribe(location => {
         if (!markers[location.id]) {
           const icon = L.divIcon({

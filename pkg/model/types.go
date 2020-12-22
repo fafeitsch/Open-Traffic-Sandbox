@@ -27,11 +27,11 @@ type Assignment struct {
 
 // WayPoint is a part of an assignment.
 type WayPoint struct {
-	Departure  Time
-	IsRealStop bool
-	Name       string
-	Latitude   float64
-	Longitude  float64
+	Departure Time
+	Id        *StopId
+	Name      string
+	Latitude  float64
+	Longitude float64
 }
 
 func (w WayPoint) Lat() float64 {
@@ -56,6 +56,7 @@ type RouteService func(...Coordinate) ([]Coordinate, float64, error)
 type BusPosition struct {
 	BusId    BusId      `json:"id"`
 	Location [2]float64 `json:"loc"`
+	Stop     *WayPoint  `json:"stop,omitempty"`
 }
 
 // Publisher is a function taking care to broadcast BusPosition updates.
@@ -154,16 +155,6 @@ func NewTicker(start Time, frequency float64, warp float64) Ticker {
 // StopId is used to identify a Stop.
 type StopId string
 
-// Stop represents a location where buses stop and let passengers enter and exit the bus.
-type Stop struct {
-	WayPoint
-	Id StopId
-}
-
-func (s *Stop) String() string {
-	return fmt.Sprintf("%s(%s)", s.Name, s.Id)
-}
-
 // LineId is used to identify a Line.
 type LineId string
 
@@ -171,7 +162,7 @@ type LineId string
 type Line struct {
 	Id              LineId
 	Name            string
-	Stops           []*Stop
+	waypoints       []*WayPoint
 	departures      map[StopId][]Time
 	DefinitionIndex int
 	Color           string
@@ -181,12 +172,35 @@ func (l *Line) String() string {
 	return fmt.Sprintf("%s(%s)", l.Name, l.Id)
 }
 
+// WayPoints returns all waypoints of the line (including way points that are no stops).
+func (l *Line) WayPoints() []*WayPoint {
+	return l.waypoints
+}
+
+// Stops returns all way points of the lines that are real stops.
+func (l *Line) Stops() []*WayPoint {
+	result := make([]*WayPoint, 0, len(l.waypoints))
+	for _, waypoint := range l.waypoints {
+		if waypoint.Id != nil {
+			result = append(result, waypoint)
+		}
+	}
+	return result
+}
+
+func (l *Line) StartTimes() []Time {
+	departures := l.departures[*l.waypoints[0].Id]
+	result := make([]Time, len(departures))
+	copy(result, departures)
+	return result
+}
+
 // TourTimes returns all departure times of the tour starting at start.
 // If no tour of this line starts at the given time, then nil is returned.
-// If the line is not well defined (e.g. no Stops, no adequate departures) then the
+// If the line is not well defined (e.g. no waypoints, no adequate departures) then the
 // behaviour of this method is not well defined. It will most likely panic.
 func (l *Line) TourTimes(start Time) []Time {
-	departures := l.departures[l.Stops[0].Id]
+	departures := l.departures[*l.waypoints[0].Id]
 	index := 0
 	departure := departures[0]
 	for departure != start && index < len(departures)-1 {
@@ -197,12 +211,8 @@ func (l *Line) TourTimes(start Time) []Time {
 		return nil
 	}
 	result := make([]Time, 0, len(departures))
-	for _, stop := range l.Stops {
-		if !stop.IsRealStop {
-			result = append(result, 0)
-			continue
-		}
-		result = append(result, l.departures[stop.Id][index])
+	for _, stop := range l.Stops() {
+		result = append(result, l.departures[*stop.Id][index])
 	}
 	return result
 }

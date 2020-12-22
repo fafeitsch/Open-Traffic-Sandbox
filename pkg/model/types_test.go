@@ -30,7 +30,11 @@ func ExampleParseTime() {
 }
 
 func ExampleLine_TourTimes() {
-	stops := []*Stop{{Id: "stopA", WayPoint: WayPoint{IsRealStop: true}}, {Id: "stopB", WayPoint: WayPoint{IsRealStop: true}}, {Id: "stopC", WayPoint: WayPoint{IsRealStop: true}}, {Id: "stopD", WayPoint: WayPoint{IsRealStop: true}}}
+	stopA := StopId("stopA")
+	stopB := StopId("stopB")
+	stopC := StopId("stopC")
+	stopD := StopId("stopD")
+	stops := []*WayPoint{{Id: &stopA}, {Id: &stopB}, {Id: &stopC}, {Id: &stopD}}
 	baseTime, _ := ParseTime("16:35")
 	departures := map[StopId][]Time{
 		"stopA": {baseTime, baseTime.Add(7 * time.Minute), baseTime.Add(14 * time.Minute)},
@@ -38,7 +42,7 @@ func ExampleLine_TourTimes() {
 		"stopC": {baseTime.Add(3 * time.Minute), baseTime.Add(12 * time.Minute), baseTime.Add(19 * time.Minute)},
 		"stopD": {baseTime.Add(1 * time.Minute), baseTime.Add(13 * time.Minute), baseTime.Add(20 * time.Minute)},
 	}
-	line := Line{Stops: stops, departures: departures}
+	line := Line{waypoints: stops, departures: departures}
 	fmt.Printf("Departures for second tour: %v\n", line.TourTimes(baseTime.Add(7*time.Minute)))
 	fmt.Printf("Returns nil if tour not found: %v\n", line.TourTimes(baseTime.Add(2*time.Minute)) == nil)
 	// Output: Departures for second tour: [16:42 16:44 16:47 16:48]

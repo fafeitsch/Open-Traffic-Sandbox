@@ -1,13 +1,14 @@
 import {Injectable} from '@angular/core';
 import {Observable, of} from 'rxjs';
-import {delay, filter, map, retryWhen, switchMap} from 'rxjs/operators';
-import {environment} from '../../environments/environment';
 import {WebSocketSubject} from 'rxjs/internal-compatibility';
+import {delay, filter, map, retryWhen, switchMap} from 'rxjs/operators';
 import {webSocket} from 'rxjs/webSocket';
+import {environment} from '../../environments/environment';
 
 export interface VehicleLocation {
   id: string;
   loc: number[];
+  stop: any;
 }
 
 @Injectable({
