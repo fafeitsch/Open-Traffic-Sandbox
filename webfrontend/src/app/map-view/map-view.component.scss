@@ -19,7 +19,7 @@
   border-radius: 5px;
 }
 
-.map-marker {
+.driving-bus, .waiting-bus {
   text-align: center;
   font-weight: bold;
   color: azure;
@@ -27,4 +27,11 @@
   width: 20px;
   height: 20px;
   border-radius: 5px;
+}
+
+.waiting-bus::after {
+  content: url("/assets/stop.svg");
+  position: absolute;
+  left: 15px;
+  top: 10px;
 }

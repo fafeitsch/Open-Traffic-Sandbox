@@ -8,7 +8,8 @@ import {environment} from '../../environments/environment';
 export interface VehicleLocation {
   id: string;
   loc: number[];
-  stop: any;
+  departure?: number;
+  stopId?: string;
 }
 
 @Injectable({

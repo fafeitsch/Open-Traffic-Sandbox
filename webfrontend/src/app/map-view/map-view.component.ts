@@ -42,19 +42,15 @@ export class MapViewComponent implements OnInit, OnDestroy {
     this.vehicleLocationService.connect().pipe(
       takeUntil(this.destroy$),
     ).subscribe(location => {
-        if (!markers[location.id]) {
-          const icon = L.divIcon({
-            className: 'map-marker',
-            iconAnchor: [10, 10],
-            iconSize: null,
-            html: `${location.id}`
-          });
-          markers[location.id] = L.marker({
+        let marker = markers[location.id];
+        if (!marker) {
+          marker = L.marker({
             lat: location.loc[0],
             lon: location.loc[1]
-          }, {fillOpacity: 1, icon: icon}).addTo(leafletMap);
-          markers[location.id].bindPopup('Loading ...');
-          markers[location.id].on('click', e => {
+          }, {fillOpacity: 1}).addTo(leafletMap);
+          markers[location.id] = marker;
+          marker.bindPopup('Loading ...');
+          marker.on('click', e => {
             const popup = e.target.getPopup();
             this.busInfoSubscription.unsubscribe();
             this.store.busSelectionChanged$(location.id);
@@ -64,9 +60,20 @@ export class MapViewComponent implements OnInit, OnDestroy {
             ).subscribe(text => popup.setContent(text));
             popup.update();
           });
-          markers[location.id].busId = location.id;
+          marker.busId = location.id;
         }
-        markers[location.id].setLatLng({lat: location.loc[0], lon: location.loc[1]});
+        let className = 'driving-bus';
+        if (location.stopId !== undefined) {
+          className = 'waiting-bus';
+        }
+        const icon = L.divIcon({
+          className: className,
+          iconAnchor: [10, 10],
+          iconSize: null,
+          html: `${location.id}`
+        });
+        marker.setIcon(icon);
+        marker.setLatLng({lat: location.loc[0], lon: location.loc[1]});
       }
     );
 

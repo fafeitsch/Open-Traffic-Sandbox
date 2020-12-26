@@ -54,9 +54,10 @@ type RouteService func(...Coordinate) ([]Coordinate, float64, error)
 // BusPosition describes the position of a certain bus at the current moment. BusPosition is meant
 // to be sent to subscribers, possible over network. Thus, we keep this struct small.
 type BusPosition struct {
-	BusId    BusId      `json:"id"`
-	Location [2]float64 `json:"loc"`
-	Stop     *WayPoint  `json:"stop,omitempty"`
+	BusId     BusId      `json:"id"`
+	Location  [2]float64 `json:"loc"`
+	StopId    *StopId    `json:"stopId,omitempty"`
+	Departure Time       `json:"departure,omitempty"`
 }
 
 // Publisher is a function taking care to broadcast BusPosition updates.

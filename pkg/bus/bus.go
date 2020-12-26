@@ -69,7 +69,7 @@ func (b *bus) handleAssignment(a model.Assignment) {
 			b.currentStop = &wayPoint
 		}
 		for last.Before(wayPoint.Departure) {
-			b.dispatcher.publish(model.BusPosition{Stop: b.currentStop, BusId: b.id, Location: [2]float64{b.position.Lat(), b.position.Lon()}})
+			b.dispatcher.publish(model.BusPosition{StopId: b.currentStop.Id, Departure: b.currentStop.Departure, BusId: b.id, Location: [2]float64{b.position.Lat(), b.position.Lon()}})
 			current, ok := <-b.heartBeatTimer.HeartBeat
 			if !ok {
 				return
