@@ -4,10 +4,10 @@ import * as L from 'leaflet';
 import {antPath} from 'leaflet-ant-path';
 import {Subject, Subscription} from 'rxjs';
 import {map, takeUntil} from 'rxjs/operators';
+import {environment} from '../../environments/environment';
 import {BusInfo} from '../bus-service/types';
 import {MapViewStore} from './map-view.store';
 import {VehicleLocationService} from './vehicle-location.service';
-import {environment} from '../../environments/environment';
 
 @Component({
   selector: 'map-view',
@@ -110,8 +110,12 @@ export class MapViewComponent implements OnInit, OnDestroy {
     } else {
       lineMarkerCss = 'style="border: solid 1px"';
     }
+    let stationInfo = '';
+    if (info.wayPoint !== undefined) {
+      stationInfo = `<div>Waiting at ${info.wayPoint.name} until ${info.wayPoint.departure}.</div>`;
+    }
     return `<div class="center-flex mb-3"><div class="line-marker mr-2" ${lineMarkerCss}></div><strong>${info.id}</strong></div>
-            <div>${info.assignment}</div>`;
+            <div>${info.assignment}</div>${stationInfo}`;
   }
 
   ngOnDestroy(): void {

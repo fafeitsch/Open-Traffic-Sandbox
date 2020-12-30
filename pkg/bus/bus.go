@@ -40,6 +40,12 @@ func (b *bus) getCurrentAssignment() *model.Assignment {
 	return &b.assignments[b.currentAssignment]
 }
 
+func (b *bus) getCurrentWaypoint() *model.WayPoint {
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+	return b.currentStop
+}
+
 func (b *bus) handleAssignment(a model.Assignment) {
 	last := <-b.heartBeatTimer.HeartBeat
 	for last.Before(a.Departure) {
@@ -66,7 +72,11 @@ func (b *bus) handleAssignment(a model.Assignment) {
 			last = current
 		}
 		if wayPoint.Id != nil {
-			b.currentStop = &wayPoint
+			func() {
+				b.mutex.Lock()
+				defer b.mutex.Unlock()
+				b.currentStop = &wayPoint
+			}()
 		}
 		for last.Before(wayPoint.Departure) {
 			b.dispatcher.publish(model.BusPosition{StopId: b.currentStop.Id, Departure: b.currentStop.Departure, BusId: b.id, Location: [2]float64{b.position.Lat(), b.position.Lon()}})

@@ -5,4 +5,11 @@ export interface BusInfo {
   id: string;
   assignment: string;
   line: Line;
+  wayPoint: WayPoint;
+}
+
+export interface WayPoint {
+  id: string;
+  name: string;
+  departure: number;
 }

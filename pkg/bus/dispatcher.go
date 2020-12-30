@@ -53,3 +53,13 @@ func (d *Dispatcher) QueryCurrentAssignment(id model.BusId) *model.Assignment {
 	}
 	return bus.getCurrentAssignment()
 }
+
+// QueryCurrentWaypoint get the waypoint the bus is currently waiting at. If the bus with the id does not exist,
+// this function panics. If the bus is currently not waiting at any waypoint, this method returns nil.
+func (d *Dispatcher) QueryCurrentWaypoint(id model.BusId) *model.WayPoint {
+	bus, ok := d.buses[id]
+	if !ok {
+		panic(fmt.Sprintf("bus with busId \"%s\" not found", id))
+	}
+	return bus.getCurrentWaypoint()
+}

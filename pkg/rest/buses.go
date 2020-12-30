@@ -8,9 +8,16 @@ import (
 )
 
 type busInfo struct {
-	Id         model.BusId `json:"id"`
-	Assignment string      `json:"assignment"`
-	Line       *restLine   `json:"line,omitempty"`
+	Id         model.BusId   `json:"id"`
+	Assignment string        `json:"assignment"`
+	Line       *restLine     `json:"line,omitempty"`
+	WayPoint   *restWaypoint `json:"wayPoint"`
+}
+
+type restWaypoint struct {
+	Departure string        `json:"departure"`
+	Id        *model.StopId `json:"id"`
+	Name      string        `json:"name"`
 }
 
 func (a *api) getBusInfo(w http.ResponseWriter, r *http.Request) {
@@ -26,6 +33,15 @@ func (a *api) getBusInfo(w http.ResponseWriter, r *http.Request) {
 	if assignment.Line != nil {
 		line := mapToRestLine(*assignment.Line)
 		result.Line = &line
+	}
+	waypoint := a.dispatcher.QueryCurrentWaypoint(bus.Id)
+	if waypoint != nil {
+		wp := &restWaypoint{
+			Departure: waypoint.Departure.String(),
+			Name:      waypoint.Name,
+			Id:        waypoint.Id,
+		}
+		result.WayPoint = wp
 	}
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
