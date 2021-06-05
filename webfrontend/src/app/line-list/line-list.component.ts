@@ -1,6 +1,6 @@
-import {ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
-import {Line} from '../line-service/types';
-import {LineListStore} from './line-list-store.service';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { Line } from '../line-service/types';
+import { LineListStore } from './line-list-store.service';
 
 @Component({
   selector: 'line-list',
@@ -10,14 +10,11 @@ import {LineListStore} from './line-list-store.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LineListComponent implements OnInit {
-
   lines$ = this.store.lines$;
 
-  constructor(private store: LineListStore) {
-  }
+  constructor(private store: LineListStore) {}
 
-  ngOnInit(): void {
-  }
+  ngOnInit(): void {}
 
   activateLine(line: Line) {
     this.store.viewLine$(line);

@@ -1,21 +1,19 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {Line} from '../../line-service/types';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Line } from '../../line-service/types';
 
 @Component({
   selector: 'line-entry',
   templateUrl: './line-entry.component.html',
-  styleUrls: ['./line-entry.component.scss']
+  styleUrls: ['./line-entry.component.scss'],
 })
 export class LineEntryComponent {
-
   visible = false;
 
-  @Input() line: Line;
+  @Input() line: Line | undefined = undefined;
   @Output() makeVisible = new EventEmitter<Line>();
   @Output() makeInvisible = new EventEmitter<Line>();
 
-  constructor() {
-  }
+  constructor() {}
 
   toggleVisibility() {
     if (this.visible) {

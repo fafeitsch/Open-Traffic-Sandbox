@@ -1,4 +1,4 @@
-import {Line} from '../line-service/types';
+import { Line } from '../line-service/types';
 
 export interface BusInfo {
   name: string;

@@ -1,4 +1,4 @@
-<div class="item">
+<div class="item" *ngIf="line">
   <span class="color-indicator mr-3" [style.background-color]="line.color"></span>
   <span class="visibility-toggle mr-3">
   <span (click)="toggleVisibility()"><mat-icon>{{visible ? "visibility" : "visibility_off"}}</mat-icon></span></span>

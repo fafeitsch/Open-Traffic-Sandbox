@@ -1,9 +1,9 @@
-import {Injectable} from '@angular/core';
-import {Observable, of} from 'rxjs';
-import {WebSocketSubject} from 'rxjs/internal-compatibility';
-import {delay, filter, map, retryWhen, switchMap} from 'rxjs/operators';
-import {webSocket} from 'rxjs/webSocket';
-import {environment} from '../../environments/environment';
+import { Injectable } from '@angular/core';
+import { Observable, of } from 'rxjs';
+import { WebSocketSubject } from 'rxjs/internal-compatibility';
+import { delay, filter, map, retryWhen, switchMap } from 'rxjs/operators';
+import { webSocket } from 'rxjs/webSocket';
+import { environment } from '../../environments/environment';
 
 export interface VehicleLocation {
   id: string;
@@ -13,11 +13,10 @@ export interface VehicleLocation {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class VehicleLocationService {
-
-  private connection$: WebSocketSubject<VehicleLocation>;
+  private connection$: WebSocketSubject<VehicleLocation> | undefined = undefined;
 
   connect(): Observable<VehicleLocation> {
     let url = location.origin;
@@ -35,6 +34,7 @@ export class VehicleLocationService {
           return this.connection$;
         }
       }),
-      retryWhen((errors) => errors.pipe(delay(10))));
+      retryWhen(errors => errors.pipe(delay(10)))
+    );
   }
 }
